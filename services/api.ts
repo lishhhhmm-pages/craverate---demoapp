@@ -1,5 +1,5 @@
 import { Review, User, Business, UserList, ContentType } from '../types';
-import { USERS, BUSINESSES, MOCK_FEED, MOCK_LISTS } from '../mockData';
+import { USERS, BUSINESSES, MOCK_FEED, MOCK_LISTS, ALL_POSTS } from '../mockData';
 
 // This service mimics a backend interaction. 
 // When you are ready for Firebase/Supabase, you just replace the contents of these functions.
@@ -16,6 +16,11 @@ export const api = {
   getFeed: async (): Promise<Review[]> => {
     await delay(300); // Fake load time
     return [...currentFeed];
+  },
+
+  getAllPosts: async (): Promise<Review[]> => {
+      await delay(300);
+      return [...ALL_POSTS];
   },
 
   createPost: async (post: Partial<Review>): Promise<Review> => {

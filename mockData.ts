@@ -1,5 +1,5 @@
 
-import { Review, ContentType, UserList, Business } from './types';
+import { Review, ContentType, UserList } from './types';
 
 // --- USERS ---
 export const USERS = {
@@ -65,7 +65,7 @@ export const USERS = {
 };
 
 // --- BUSINESSES (Updated for Athens, Greece) ---
-export const BUSINESSES: Record<string, Business> = {
+export const BUSINESSES = {
   b1: {
     id: 'b1',
     name: 'Plaka Taverna',
@@ -149,6 +149,22 @@ export const BUSINESSES: Record<string, Business> = {
     coordinates: { x: 70, y: 35 }, // North East
     distance: '250m',
     walkingTime: '4 min'
+  },
+  b5: {
+    id: 'b5',
+    name: 'Juicy Grill',
+    username: 'juicy_grill',
+    displayName: 'Juicy Grill',
+    category: 'Burger Joint',
+    location: 'Cholargos, Athens',
+    avatarUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&h=200&fit=crop',
+    coverImageUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80',
+    isVerified: true,
+    bio: 'The biggest burgers in town. 🍔',
+    rating: 4.9,
+    reviewCount: 8900,
+    priceLevel: '$$',
+    isOpen: true
   }
 };
 
@@ -197,6 +213,8 @@ export const MOCK_LISTS: UserList[] = [
 ];
 
 // --- FEED / REVIEWS ---
+
+// 1. The Main "For You" Feed (Curated, does not contain everything initially)
 export const MOCK_FEED: Review[] = [
   {
     id: '1',
@@ -218,12 +236,12 @@ export const MOCK_FEED: Review[] = [
     id: '2',
     type: ContentType.BUSINESS_POST,
     mediaType: 'video',
-    author: BUSINESSES.b2,
+    author: BUSINESSES.b2 as any,
     businessId: 'b2',
     businessName: 'Gyro King',
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
     imageUrl: 'https://images.unsplash.com/photo-1586816001966-79b736744398?w=800&q=80',
-    text: '🥙 THE KING SIZE GYRO IS BACK! Available this weekend only. Tag a friend who can finish this beast. We are open until 4 AM every Friday and Saturday!',
+    text: '🥙 THE KING SIZE GYRO IS BACK! Available this weekend only. Tag a friend who can finish this beast.',
     timestamp: '5h ago',
     agreeCount: 8500,
     disagreeCount: 24,
@@ -251,49 +269,17 @@ export const MOCK_FEED: Review[] = [
     type: ContentType.USER_REVIEW,
     mediaType: 'video',
     author: USERS.u4,
-    businessId: 'b1', // Reviewing Plaka Taverna
+    businessId: 'b1', 
     businessName: 'Plaka Taverna',
     rating: 5.0,
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', 
     imageUrl: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd43da?w=800&q=80', 
-    text: 'Best seafood in the city! 🐟 Every plate was fresh. Highly recommend the grilled octopus. It was perfectly charred and tender.',
+    text: 'Best seafood in the city! 🐟 Every plate was fresh. Highly recommend the grilled octopus.',
     timestamp: '3d ago',
     agreeCount: 2300,
     disagreeCount: 5,
     commentCount: 88,
     tags: ['Seafood', 'Greek', 'Octopus']
-  },
-  {
-    id: '5',
-    type: ContentType.USER_REVIEW,
-    mediaType: 'image',
-    author: USERS.u1,
-    businessId: 'b2',
-    businessName: 'Gyro King',
-    rating: 4.2,
-    imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80',
-    text: 'The pita is crispier than ever. 🍟',
-    timestamp: '4d ago',
-    agreeCount: 56,
-    disagreeCount: 2,
-    commentCount: 5,
-    tags: ['Pita', 'Lunch']
-  },
-  {
-    id: '6',
-    type: ContentType.USER_REVIEW,
-    mediaType: 'image',
-    author: USERS.u5,
-    businessId: 'b2',
-    businessName: 'Gyro King',
-    rating: 2.0,
-    imageUrl: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=800&q=80',
-    text: 'Too greasy for me. Sorry!',
-    timestamp: '5d ago',
-    agreeCount: 12,
-    disagreeCount: 45,
-    commentCount: 23,
-    tags: ['Greasy', 'HonestReview']
   },
   {
     id: '7',
@@ -315,7 +301,7 @@ export const MOCK_FEED: Review[] = [
     id: '8',
     type: ContentType.BUSINESS_POST,
     mediaType: 'image',
-    author: BUSINESSES.b1,
+    author: BUSINESSES.b1 as any,
     businessId: 'b1',
     businessName: 'Plaka Taverna',
     imageUrl: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800&q=80',
@@ -326,4 +312,94 @@ export const MOCK_FEED: Review[] = [
     commentCount: 302,
     tags: ['FallMenu', 'Dolmades']
   }
+];
+
+// 2. The "Database" of All Posts (Used for Search Results)
+export const ALL_POSTS: Review[] = [
+    ...MOCK_FEED,
+    // EXTRA CONTENT ONLY FOUND VIA SEARCH
+    // NEW BURGER POSTS
+  {
+    id: 'b_1',
+    type: ContentType.USER_REVIEW,
+    mediaType: 'image',
+    author: USERS.u5,
+    businessId: 'b5',
+    businessName: 'Juicy Grill',
+    rating: 5.0,
+    imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80',
+    text: 'This burger is absolutely MASSIVE. The cheese sauce is to die for. 🍔🧀 Best Burgers in Athens hands down.',
+    timestamp: '2d ago',
+    agreeCount: 4500,
+    disagreeCount: 12,
+    commentCount: 340,
+    tags: ['Burgers', 'Cheesy', 'FoodPorn']
+  },
+  {
+    id: 'b_2',
+    type: ContentType.USER_REVIEW,
+    mediaType: 'image',
+    author: USERS.u1,
+    businessId: 'b5',
+    businessName: 'Juicy Grill',
+    rating: 4.5,
+    imageUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80',
+    text: 'Worth the hype, but be prepared to wait in line! The brioche bun is perfect. 🍔',
+    timestamp: '4d ago',
+    agreeCount: 210,
+    disagreeCount: 5,
+    commentCount: 45,
+    tags: ['Burgers', 'Dinner']
+  },
+  // NEW PIZZA POSTS
+  {
+    id: 'p_1',
+    type: ContentType.USER_REVIEW,
+    mediaType: 'image',
+    author: USERS.u4,
+    businessId: 'b1', 
+    businessName: 'Napoli Pizza',
+    rating: 4.9,
+    imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
+    text: 'Authentic Neapolitan style pizza right here! The crust is so fluffy. 🍕🇮🇹',
+    timestamp: '3h ago',
+    agreeCount: 890,
+    disagreeCount: 2,
+    commentCount: 67,
+    tags: ['Pizza', 'Italian', 'Authentic']
+  },
+  {
+    id: 'p_2',
+    type: ContentType.USER_REVIEW,
+    mediaType: 'video',
+    author: USERS.u1,
+    businessId: 'b1', 
+    businessName: 'Crust',
+    rating: 4.2,
+    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', 
+    imageUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&q=80',
+    text: 'Late night pizza slice heaven. 🍕 Perfect after a night out.',
+    timestamp: '12h ago',
+    agreeCount: 1200,
+    disagreeCount: 45,
+    commentCount: 89,
+    tags: ['Pizza', 'StreetFood', 'LateNight']
+  },
+  // NEW SUSHI POST
+  {
+    id: 's_1',
+    type: ContentType.USER_REVIEW,
+    mediaType: 'image',
+    author: USERS.u4,
+    businessId: 'b1', 
+    businessName: 'Sushimou',
+    rating: 5.0,
+    imageUrl: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80',
+    text: 'Omakase experience was unforgettable. 🍣 Fresh fish and amazing chef.',
+    timestamp: '5d ago',
+    agreeCount: 560,
+    disagreeCount: 0,
+    commentCount: 23,
+    tags: ['Sushi', 'Japanese', 'FineDining']
+  },
 ];

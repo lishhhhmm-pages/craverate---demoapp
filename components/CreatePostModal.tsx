@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Search, MapPin, Camera, Star, ChevronLeft, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Business, DraftPost } from '../types';
 import { api } from '../services/api';
@@ -7,9 +7,10 @@ interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPostCreated: () => void;
+  preselectedBusiness?: Business | null; // New prop for direct reviews
 }
 
-export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onPostCreated }) => {
+export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onPostCreated, preselectedBusiness }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,10 +29,28 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- INITIALIZATION ---
+  useEffect(() => {
+    if (isOpen) {
+        if (preselectedBusiness) {
+            // Direct Review Mode: Skip to Step 2
+            setDraft(prev => ({
+                ...prev,
+                businessId: preselectedBusiness.id,
+                businessName: preselectedBusiness.name
+            }));
+            setStep(2);
+        } else {
+            // Standard Mode: Start at Step 1
+            setStep(1);
+        }
+    }
+  }, [isOpen, preselectedBusiness]);
+
   // --- HANDLERS ---
 
   // Step 1: Search logic
-  React.useEffect(() => {
+  useEffect(() => {
     if (step === 1) {
       api.searchBusinesses(searchQuery).then(setSearchResults);
     }
@@ -78,18 +97,21 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
   };
 
   const resetForm = () => {
-    setStep(1);
-    setDraft({
-      businessId: null,
-      businessName: '',
-      mediaFile: null,
-      mediaPreviewUrl: '',
-      rating: 0,
-      text: '',
-      tags: []
-    });
-    setSearchQuery('');
-    setIsSubmitting(false);
+    // We delay the step reset slightly to avoid UI jumping before modal closes
+    setTimeout(() => {
+        setStep(1);
+        setDraft({
+            businessId: null,
+            businessName: '',
+            mediaFile: null,
+            mediaPreviewUrl: '',
+            rating: 0,
+            text: '',
+            tags: []
+        });
+        setSearchQuery('');
+        setIsSubmitting(false);
+    }, 300);
     onClose();
   };
 
@@ -101,10 +123,19 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
       {/* HEADER */}
       <div className="px-4 h-14 flex items-center justify-between border-b border-gray-100">
         <button 
-          onClick={() => step > 1 ? setStep(step - 1 as any) : onClose()}
+          onClick={() => {
+              // If we have a preselected business, back button should close modal instead of going to search
+              if (step === 2 && preselectedBusiness) {
+                  onClose();
+              } else if (step > 1) {
+                  setStep(step - 1 as any);
+              } else {
+                  onClose();
+              }
+          }}
           className="p-2 -ml-2 text-gray-900"
         >
-          {step === 1 ? <X className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+          {(step === 1 || (step === 2 && preselectedBusiness)) ? <X className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
         </button>
         <span className="font-bold text-gray-900">
           {step === 1 ? 'Select Place' : step === 2 ? 'Add Media' : 'Review'}
@@ -145,7 +176,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
                   </div>
                 </button>
               ))}
-              {/* Fallback for "Create New Place" would go here in real app */}
             </div>
           </div>
         )}
@@ -153,6 +183,13 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
         {/* === STEP 2: MEDIA === */}
         {step === 2 && (
            <div className="h-full flex flex-col items-center justify-center p-6 space-y-6">
+              {preselectedBusiness && (
+                  <div className="mb-4 text-center">
+                      <h3 className="text-lg font-black text-gray-900">Reviewing {preselectedBusiness.name}</h3>
+                      <p className="text-sm text-gray-500">First, share a photo or video!</p>
+                  </div>
+              )}
+
               <input 
                 type="file" 
                 ref={fileInputRef} 

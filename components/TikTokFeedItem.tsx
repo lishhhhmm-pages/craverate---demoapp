@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Review, ContentType } from '../types';
-import { Star, MessageCircle, Heart, Share2, MapPin, BadgeCheck, Play, Loader2, Bookmark, Check } from 'lucide-react';
+import { Star, MessageCircle, Heart, Share2, MapPin, BadgeCheck, Play, Loader2, Bookmark } from 'lucide-react';
 
 interface TikTokFeedItemProps {
   item: Review;
@@ -264,14 +264,15 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
           )}
         </div>
 
-        {/* Overlay Gradient - Made slightly stronger at the bottom for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent via-50% to-black/90 pointer-events-none" />
+        {/* Overlay Gradient - Stronger bottom for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent via-60% to-black/95 pointer-events-none" />
 
         {/* Right Sidebar Actions */}
-        <div className="absolute bottom-32 right-2 flex flex-col items-center space-y-6 z-20 pointer-events-auto">
+        {/* Positioned at bottom-[70px] as requested */}
+        <div className="absolute bottom-[70px] right-2 flex flex-col items-center space-y-4 z-20 pointer-events-auto">
           {/* Avatar */}
           <div className="relative group cursor-pointer" onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}>
-            <div className="w-12 h-12 rounded-full border-2 border-white p-0.5 overflow-hidden bg-gray-800 transition-transform group-active:scale-90 shadow-lg">
+            <div className="w-11 h-11 rounded-full border-2 border-white p-0.5 overflow-hidden bg-gray-800 transition-transform group-active:scale-90 shadow-lg">
               <img 
                 src={item.author.avatarUrl} 
                 alt={item.author.displayName} 
@@ -280,58 +281,58 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
               />
             </div>
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500 rounded-full p-0.5 shadow-sm hover:scale-110 transition-transform">
-              <div className="w-4 h-4 flex items-center justify-center text-[10px] font-bold text-white">+</div>
+              <div className="w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold text-white">+</div>
             </div>
           </div>
 
           {/* Like */}
           <button 
-            className="flex flex-col items-center space-y-1 group"
+            className="flex flex-col items-center space-y-0.5 group"
             onClick={(e) => { e.stopPropagation(); triggerVote(voteState === 'agreed' ? 'none' : 'agreed'); }}
           >
-            <div className={`p-2 backdrop-blur-md rounded-full transition-all duration-300 shadow-lg ${voteState === 'agreed' ? 'bg-green-500 scale-110' : 'bg-black/30 hover:bg-black/50 border border-white/10'}`}>
-              <Heart className={`w-8 h-8 transition-colors ${voteState === 'agreed' ? 'fill-white text-white' : 'text-white fill-white/10 group-hover:text-red-500'}`} />
+            <div className={`p-2 backdrop-blur-md rounded-full transition-all duration-300 shadow-lg ${voteState === 'agreed' ? 'bg-green-500 scale-110' : 'bg-black/20 hover:bg-black/40 border border-white/10'}`}>
+              <Heart className={`w-7 h-7 transition-colors ${voteState === 'agreed' ? 'fill-white text-white' : 'text-white fill-white/10 group-hover:text-red-500'}`} />
             </div>
-            <span className="text-xs font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <span className="text-[10px] font-bold text-white drop-shadow-md">
                 {item.agreeCount + (voteState === 'agreed' ? 1 : 0)}
             </span>
           </button>
 
           {/* Comments */}
-          <button className="flex flex-col items-center space-y-1 group" onClick={handleComments}>
-            <div className="p-2 bg-black/30 hover:bg-black/50 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10">
-              <MessageCircle className="w-8 h-8 text-white fill-white/10 group-hover:fill-blue-500 group-hover:text-blue-500 transition-colors" />
+          <button className="flex flex-col items-center space-y-0.5 group" onClick={handleComments}>
+            <div className="p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10">
+              <MessageCircle className="w-7 h-7 text-white fill-white/10 group-hover:fill-blue-500 group-hover:text-blue-500 transition-colors" />
             </div>
-            <span className="text-xs font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <span className="text-[10px] font-bold text-white drop-shadow-md">
                 {item.commentCount}
             </span>
           </button>
           
           {/* Save */}
-          <button className="flex flex-col items-center space-y-1 group" onClick={handleBookmark}>
-            <div className={`p-2 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10 ${isSaved ? 'bg-orange-500 border-transparent' : 'bg-black/30 hover:bg-black/50'}`}>
-              <Bookmark className={`w-8 h-8 transition-colors ${isSaved ? 'text-white fill-white' : 'text-white fill-white/10 group-hover:text-orange-400'}`} />
+          <button className="flex flex-col items-center space-y-0.5 group" onClick={handleBookmark}>
+            <div className={`p-2 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10 ${isSaved ? 'bg-orange-500 border-transparent' : 'bg-black/20 hover:bg-black/40'}`}>
+              <Bookmark className={`w-7 h-7 transition-colors ${isSaved ? 'text-white fill-white' : 'text-white fill-white/10 group-hover:text-orange-400'}`} />
             </div>
-            <span className="text-xs font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <span className="text-[10px] font-bold text-white drop-shadow-md">
                 Save
             </span>
           </button>
 
           {/* Share */}
-          <button className="flex flex-col items-center space-y-1 group" onClick={handleShare}>
-            <div className="p-2 bg-black/30 hover:bg-black/50 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10">
-               <Share2 className="w-8 h-8 text-white group-hover:text-green-400 transition-colors" />
+          <button className="flex flex-col items-center space-y-0.5 group" onClick={handleShare}>
+            <div className="p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10">
+               <Share2 className="w-7 h-7 text-white group-hover:text-green-400 transition-colors" />
             </div>
-            <span className="text-xs font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <span className="text-[10px] font-bold text-white drop-shadow-md">
                 Share
             </span>
           </button>
         </div>
 
-        {/* Bottom Info - Lifted to avoid navigation overlap */}
-        <div className="absolute bottom-28 left-0 right-16 px-4 z-10 flex flex-col justify-end pointer-events-auto drop-shadow-lg">
+        {/* Bottom Info - Positioned at bottom-[70px] as requested */}
+        <div className="absolute bottom-[70px] left-0 right-16 px-4 z-10 flex flex-col justify-end pointer-events-auto drop-shadow-lg">
           <div 
-            className="flex items-center space-x-2 mb-2 cursor-pointer w-fit"
+            className="flex items-center space-x-2 mb-1.5 cursor-pointer w-fit"
             onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}
           >
             <span className="font-black text-lg text-white shadow-black hover:underline tracking-wide drop-shadow-md">
@@ -356,7 +357,7 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
             <span className="text-[10px] font-bold text-white tracking-wide">{item.businessName}</span>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2.5">
              <p className="text-sm text-white/95 leading-relaxed font-medium drop-shadow-md transition-all line-clamp-2">
                 {item.text}
              </p>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, MoreHorizontal, MapPin, Grid, Layers, BadgeCheck, Star, Users, Phone, Globe, MessageSquare, Play, Bookmark, Instagram, Twitter, Youtube, Link as LinkIcon } from 'lucide-react';
+import { ChevronLeft, MoreHorizontal, MapPin, Grid, Layers, BadgeCheck, Star, Users, Phone, Globe, MessageSquare, Play, Bookmark, Instagram, Twitter, Youtube, Link as LinkIcon, PenLine } from 'lucide-react';
 import { MOCK_FEED, MOCK_LISTS, BUSINESSES, USERS } from '../mockData';
 import { ContentType, Business, UserList } from '../types';
 
@@ -10,9 +10,10 @@ interface ProfileViewProps {
   isOwnProfile?: boolean;
   customLists?: UserList[]; 
   onSaveClick?: (id: string) => void;
+  onWriteReview?: (business: Business) => void; // New callback
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness = false, onBack, isOwnProfile = false, customLists, onSaveClick }) => {
+export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness = false, onBack, isOwnProfile = false, customLists, onSaveClick, onWriteReview }) => {
   // 1. Data Retrieval
   let profileData: any = null;
 
@@ -61,7 +62,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
   );
 
   return (
-    <div className="bg-white min-h-full pb-20">
+    <div className="bg-white min-h-full pb-20 relative">
       
       {/* --- HERO HEADER --- */}
       <div className="relative">
@@ -411,6 +412,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
             )
         )}
       </div>
+
+      {/* --- FLOATING 'WRITE REVIEW' BUTTON FOR BUSINESS PROFILES --- */}
+      {isBusiness && (
+          <div className="fixed bottom-28 right-5 z-30 animate-[slideUp_0.4s_ease-out]">
+              <button 
+                onClick={() => onWriteReview && onWriteReview(displayProfile as Business)}
+                className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-full shadow-lg shadow-orange-500/30 transition-all hover:scale-105 active:scale-95 group"
+              >
+                  <PenLine className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  <span className="font-bold text-sm">Rate & Review</span>
+              </button>
+          </div>
+      )}
 
     </div>
   );

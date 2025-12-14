@@ -106,7 +106,8 @@ export const MapView: React.FC<MapViewProps> = ({ onOpenProfile }) => {
     layer.clearLayers();
 
     // Filter Logic
-    const filteredBusinesses = Object.values(BUSINESSES).filter(biz => {
+    const allBusinesses = Object.values(BUSINESSES) as unknown as Business[];
+    const filteredBusinesses = allBusinesses.filter(biz => {
         if (!activeFilter) return true;
         if (activeFilter === 'Open Now') return biz.isOpen;
         if (activeFilter === 'Top Rated') return (biz.rating || 0) >= 4.5;

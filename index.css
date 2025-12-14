@@ -2,7 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Map Marker styles */
+/* Custom Scrollbar Utilities */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Map Marker Styles */
 .custom-div-icon {
   background: transparent;
   border: none;
