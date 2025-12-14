@@ -1,0 +1,9 @@
+{
+  "name": "deplayable xal",
+  "description": "A social food review app focusing on visual content, collaborative lists, and verified business updates.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
