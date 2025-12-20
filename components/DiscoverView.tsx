@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Star, X, Play, Video, Utensils, Award } from 'lucide-react';
+import { Search, Star, X, Play, Video } from 'lucide-react';
 import { MOCK_FEED, BUSINESSES } from '../mockData';
 import { TikTokFeedItem } from './TikTokFeedItem';
 
@@ -24,12 +24,10 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
     { name: 'POV', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   ];
 
-  // Filtering Logic: Combines text, cuisine, and rating
   const filteredFeed = MOCK_FEED.filter(item => {
     const q = searchTerm.toLowerCase();
     const biz = BUSINESSES[item.businessId];
     
-    // 1. Text Search (Business Name, Content, Tags, Author)
     const matchesText = !q || (
       item.businessName.toLowerCase().includes(q) ||
       item.text.toLowerCase().includes(q) ||
@@ -37,21 +35,17 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
       item.author.username.toLowerCase().includes(q)
     );
 
-    // 2. Cuisine Filter
     const matchesCuisine = !selectedCuisine || (
       biz?.category.toLowerCase() === selectedCuisine.toLowerCase() ||
       item.tags?.some(tag => tag.toLowerCase() === selectedCuisine.toLowerCase())
     );
 
-    // 3. Rating Filter (Either post rating or business rating)
     const itemRating = item.rating || biz?.rating || 0;
     const matchesRating = !minRating || itemRating >= minRating;
 
-    // Special Intent Logic for "video" searches
-    const isVideoSearch = q === 'video' || q === 'muckbang' || q === 'video reviews' || q === 'pov';
-    if (isVideoSearch && q !== '') {
-       if ((q === 'video' || q === 'video reviews') && item.mediaType !== 'video') return false;
-       if ((q === 'muckbang' || q === 'pov') && !item.tags?.some(tag => tag.toLowerCase().includes(q))) return false;
+    if (q) {
+      if ((q === 'video' || q === 'video reviews') && item.mediaType !== 'video') return false;
+      if ((q === 'muckbang' || q === 'pov') && !item.tags?.some(tag => tag.toLowerCase().includes(q))) return false;
     }
 
     return matchesText && matchesCuisine && matchesRating;
@@ -90,8 +84,6 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
 
   return (
     <div className="bg-white min-h-full pb-32">
-      
-      {/* Sticky Header with Search and Filters */}
       <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-2xl border-b border-gray-100">
         <div className="px-5 pt-5 pb-3">
           <div className="relative group">
@@ -116,9 +108,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
           </div>
         </div>
 
-        {/* Horizontal Filters */}
         <div className="px-5 pb-4 space-y-3">
-          {/* Cuisines */}
           <div className="flex space-x-2 overflow-x-auto no-scrollbar">
             <button 
               onClick={() => setSelectedCuisine(null)}
@@ -136,26 +126,10 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
               </button>
             ))}
           </div>
-
-          {/* Rating Toggles */}
-          <div className="flex space-x-2">
-            {[4, 4.5].map(val => (
-              <button 
-                key={val}
-                onClick={() => setMinRating(minRating === val ? null : val)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${minRating === val ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
-              >
-                <Award className={`w-3 h-3 ${minRating === val ? 'text-white' : 'text-amber-500'}`} />
-                <span>{val}+ Stars</span>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
       <div className="py-6 space-y-8">
-        
-        {/* Trending Spots (Circular Stories) - Only show if no filters active */}
         {!searchTerm && !selectedCuisine && !minRating && (
           <section>
             <div className="px-5 flex items-center justify-between mb-4">
@@ -180,7 +154,6 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
           </section>
         )}
 
-        {/* Vibe Tags */}
         <section className="px-5">
           <div className="flex flex-wrap gap-2">
             {vibes.map((v) => (
@@ -199,20 +172,11 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
           </div>
         </section>
 
-        {/* Masonry Grid */}
         <section className="px-3">
           <div className="px-2 mb-4 flex items-center justify-between">
             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
               {filteredFeed.length} {filteredFeed.length === 1 ? 'Result' : 'Results'}
             </h3>
-            {(selectedCuisine || minRating || searchTerm) && (
-              <button 
-                onClick={() => { setSearchTerm(''); setSelectedCuisine(null); setMinRating(null); }}
-                className="text-[9px] font-black text-orange-600 uppercase tracking-widest"
-              >
-                Reset Filters
-              </button>
-            )}
           </div>
           
           <div className="columns-2 gap-2.5 space-y-2.5">
@@ -234,26 +198,11 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
 
                 <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white pointer-events-none transition-transform duration-300 group-hover:-translate-y-1">
                   <p className="text-[10px] font-black line-clamp-1 drop-shadow-md tracking-tight">{item.businessName}</p>
-                  <div className="flex items-center text-[8px] font-bold opacity-80 mt-1 uppercase tracking-widest">
-                    <img src={item.author.avatarUrl} className="w-3.5 h-3.5 rounded-full mr-1.5 border border-white/50" alt="" />
-                    <span className="truncate">@{item.author.username}</span>
-                  </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          {filteredFeed.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-24 text-center px-10">
-              <div className="p-6 bg-gray-50 rounded-full mb-5 border border-gray-100">
-                <Search className="w-10 h-10 text-gray-200" />
-              </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No cravings matched your filters</p>
-              <button onClick={() => { setSearchTerm(''); setSelectedCuisine(null); setMinRating(null); }} className="mt-4 text-[10px] font-black text-orange-600 uppercase tracking-widest hover:underline">Clear all filters</button>
-            </div>
-          )}
         </section>
-
       </div>
     </div>
   );

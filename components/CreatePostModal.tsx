@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Search, MapPin, Camera, Star, ChevronLeft, Upload, Loader2, Image as ImageIcon, Sparkles, Wand2 } from 'lucide-react';
+import { X, Search, MapPin, Camera, Star, ChevronLeft, Upload, Loader2, Wand2 } from 'lucide-react';
 import { Business, DraftPost } from '../types';
 import { api } from '../services/api';
 import { GoogleGenAI } from "@google/genai";
@@ -76,7 +77,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
     setIsAiEditing(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const response = await fetch(draft.mediaPreviewUrl);
       const blob = await response.blob();
       const base64Data = await blobToBase64(blob);
@@ -98,7 +99,8 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
         },
       });
 
-      for (const part of result.candidates[0].content.parts) {
+      const parts = result.candidates?.[0]?.content?.parts || [];
+      for (const part of parts) {
         if (part.inlineData) {
           const newBase64 = part.inlineData.data;
           const newUrl = `data:image/png;base64,${newBase64}`;
