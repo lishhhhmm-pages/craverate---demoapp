@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Search, MapPin, Filter, ArrowUpRight, Star, Flame, ChevronRight, Layers, Bookmark, X, Play } from 'lucide-react';
+import { Search, Filter, Star, X, Play, Video, Utensils, Award } from 'lucide-react';
 import { MOCK_FEED, BUSINESSES } from '../mockData';
 import { TikTokFeedItem } from './TikTokFeedItem';
 
@@ -9,181 +10,248 @@ interface DiscoverViewProps {
 
 export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
+  const [minRating, setMinRating] = useState<number | null>(null);
   const [activeFeedPostId, setActiveFeedPostId] = useState<string | null>(null);
 
   const cuisines = [
-    { name: 'Sushi', emoji: '🍣' },
-    { name: 'Burgers', emoji: '🍔' },
-    { name: 'Pizza', emoji: '🍕' },
-    { name: 'Mexican', emoji: '🌮' },
-    { name: 'Coffee', emoji: '☕️' },
-    { name: 'Dessert', emoji: '🍦' },
-    { name: 'Healthy', emoji: '🥗' },
-    { name: 'Asian', emoji: '🍜' },
+    'Greek', 'Street Food', 'Japanese', 'Bakery', 'Coffee Shop', 'Italian', 'Mexican'
   ];
 
   const vibes = [
-    { name: 'Date Night', color: 'bg-rose-50 text-rose-700 border-rose-200' },
-    { name: 'Cheap Eats', color: 'bg-green-50 text-green-700 border-green-200' },
-    { name: 'Live Music', color: 'bg-purple-50 text-purple-700 border-purple-200', animate: true },
-    { name: 'Quiet Study', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    { name: 'Outdoor', color: 'bg-orange-50 text-orange-700 border-orange-200' },
+    { name: 'Muckbang', color: 'bg-orange-50 text-orange-700 border-orange-200', icon: Play },
+    { name: 'Video Reviews', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Video },
+    { name: 'POV', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   ];
 
-  // Filtering Logic
+  // Filtering Logic: Combines text, cuisine, and rating
   const filteredFeed = MOCK_FEED.filter(item => {
-      const q = searchTerm.toLowerCase();
-      if (!q) return true;
-      return (
-          item.businessName.toLowerCase().includes(q) ||
-          item.text.toLowerCase().includes(q) ||
-          item.tags?.some(tag => tag.toLowerCase().includes(q))
-      );
+    const q = searchTerm.toLowerCase();
+    const biz = BUSINESSES[item.businessId];
+    
+    // 1. Text Search (Business Name, Content, Tags, Author)
+    const matchesText = !q || (
+      item.businessName.toLowerCase().includes(q) ||
+      item.text.toLowerCase().includes(q) ||
+      item.tags?.some(tag => tag.toLowerCase().includes(q)) ||
+      item.author.username.toLowerCase().includes(q)
+    );
+
+    // 2. Cuisine Filter
+    const matchesCuisine = !selectedCuisine || (
+      biz?.category.toLowerCase() === selectedCuisine.toLowerCase() ||
+      item.tags?.some(tag => tag.toLowerCase() === selectedCuisine.toLowerCase())
+    );
+
+    // 3. Rating Filter (Either post rating or business rating)
+    const itemRating = item.rating || biz?.rating || 0;
+    const matchesRating = !minRating || itemRating >= minRating;
+
+    // Special Intent Logic for "video" searches
+    const isVideoSearch = q === 'video' || q === 'muckbang' || q === 'video reviews' || q === 'pov';
+    if (isVideoSearch && q !== '') {
+       if ((q === 'video' || q === 'video reviews') && item.mediaType !== 'video') return false;
+       if ((q === 'muckbang' || q === 'pov') && !item.tags?.some(tag => tag.toLowerCase().includes(q))) return false;
+    }
+
+    return matchesText && matchesCuisine && matchesRating;
   });
 
   const featuredBusinesses = Object.values(BUSINESSES);
 
-  // If a post is active, show the Full Screen Feed Overlay
   if (activeFeedPostId) {
-      // Reorder feed to start with selected post
-      const selectedIndex = filteredFeed.findIndex(p => p.id === activeFeedPostId);
-      const reorderedFeed = [
-          ...filteredFeed.slice(selectedIndex),
-          ...filteredFeed.slice(0, selectedIndex)
-      ];
+    const selectedIndex = filteredFeed.findIndex(p => p.id === activeFeedPostId);
+    const reorderedFeed = [
+      ...filteredFeed.slice(selectedIndex),
+      ...filteredFeed.slice(0, selectedIndex)
+    ];
 
-      return (
-          <div className="fixed inset-0 z-50 bg-black animate-[slideUp_0.3s_ease-out]">
-              <button 
-                onClick={() => setActiveFeedPostId(null)}
-                className="absolute top-4 left-4 z-50 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60"
-              >
-                  <X className="w-6 h-6" />
-              </button>
-              <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar scroll-smooth">
-                  {reorderedFeed.map((item, index) => (
-                      <TikTokFeedItem 
-                        key={item.id} 
-                        item={item} 
-                        isActive={index === 0} // Simplification: assume first is active initially
-                        onSaveClick={() => onSaveClick?.(item.id)}
-                      />
-                  ))}
-              </div>
-          </div>
-      );
+    return (
+      <div className="fixed inset-0 z-50 bg-black animate-[slideUp_0.3s_ease-out]">
+        <button 
+          onClick={() => setActiveFeedPostId(null)}
+          className="absolute top-4 left-4 z-50 p-2.5 bg-black/40 backdrop-blur-xl rounded-full text-white border border-white/20 shadow-2xl active:scale-90 transition-transform"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar scroll-smooth">
+          {reorderedFeed.map((item, index) => (
+            <TikTokFeedItem 
+              key={item.id} 
+              item={item} 
+              isActive={index === 0} 
+              onSaveClick={() => onSaveClick?.(item.id)}
+            />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="bg-white min-h-full pb-24">
+    <div className="bg-white min-h-full pb-32">
       
-      {/* Sticky Search Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl px-4 pt-4 pb-3 border-b border-gray-100/50 supports-[backdrop-filter]:bg-white/60">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
+      {/* Sticky Header with Search and Filters */}
+      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-2xl border-b border-gray-100">
+        <div className="px-5 pt-5 pb-3">
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-11 pr-11 py-3.5 bg-gray-100/60 border-transparent focus:border-orange-500/10 focus:bg-white rounded-2xl text-sm font-bold text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm"
+              placeholder="Search muckbangs, POV, or spots..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <input
-            type="text"
-            className="block w-full pl-10 pr-10 py-3 bg-gray-100/80 border-transparent focus:border-orange-500/20 focus:bg-white rounded-2xl text-sm font-medium text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all shadow-sm"
-            placeholder="Search cravings, spots, or vibes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-            <button className="p-1.5 rounded-lg hover:bg-gray-200/80 text-gray-400 hover:text-gray-600 transition-colors">
-                <Filter className="h-4 w-4" />
+        </div>
+
+        {/* Horizontal Filters */}
+        <div className="px-5 pb-4 space-y-3">
+          {/* Cuisines */}
+          <div className="flex space-x-2 overflow-x-auto no-scrollbar">
+            <button 
+              onClick={() => setSelectedCuisine(null)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${!selectedCuisine ? 'bg-orange-600 border-orange-600 text-white shadow-md' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
+            >
+              All
             </button>
+            {cuisines.map(c => (
+              <button 
+                key={c}
+                onClick={() => setSelectedCuisine(selectedCuisine === c ? null : c)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${selectedCuisine === c ? 'bg-orange-600 border-orange-600 text-white shadow-md' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Rating Toggles */}
+          <div className="flex space-x-2">
+            {[4, 4.5].map(val => (
+              <button 
+                key={val}
+                onClick={() => setMinRating(minRating === val ? null : val)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${minRating === val ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
+              >
+                <Award className={`w-3 h-3 ${minRating === val ? 'text-white' : 'text-amber-500'}`} />
+                <span>{val}+ Stars</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="py-6 space-y-6">
+      <div className="py-6 space-y-8">
         
-        {/* Quick Shops View (Horizontal Scroll) */}
-        <section>
-             <div className="px-4 flex items-center justify-between mb-3">
-                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider text-xs text-gray-400">Trending Spots</h3>
-             </div>
-             <div className="flex space-x-4 overflow-x-auto no-scrollbar px-4 pb-2">
-                 {featuredBusinesses.map((biz) => (
-                     <div key={biz.id} className="flex flex-col items-center space-y-2 min-w-[72px]">
-                         <div className="w-16 h-16 rounded-full p-0.5 border-2 border-orange-500">
-                             <img src={biz.avatarUrl} alt={biz.name} className="w-full h-full rounded-full object-cover border-2 border-white" />
-                         </div>
-                         <div className="text-center">
-                             <p className="text-xs font-bold text-gray-900 truncate w-20">{biz.name}</p>
-                             <div className="flex items-center justify-center text-[10px] text-gray-500">
-                                 <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500 mr-0.5" />
-                                 {biz.rating}
-                             </div>
-                         </div>
-                     </div>
-                 ))}
-             </div>
-        </section>
+        {/* Trending Spots (Circular Stories) - Only show if no filters active */}
+        {!searchTerm && !selectedCuisine && !minRating && (
+          <section>
+            <div className="px-5 flex items-center justify-between mb-4">
+              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Trending Spots</h3>
+            </div>
+            <div className="flex space-x-5 overflow-x-auto no-scrollbar px-5 pb-2">
+              {featuredBusinesses.map((biz) => (
+                <div key={biz.id} className="flex flex-col items-center space-y-2.5 min-w-[72px] group cursor-pointer active:scale-95 transition-transform">
+                  <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-orange-400 to-rose-500 shadow-lg group-hover:rotate-6 transition-transform">
+                    <img src={biz.avatarUrl} alt={biz.name} className="w-full h-full rounded-full object-cover border-4 border-white" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-black text-gray-900 truncate w-18 tracking-tight">{biz.name}</p>
+                    <div className="flex items-center justify-center text-[9px] text-gray-500 font-bold">
+                      <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500 mr-1" />
+                      {biz.rating}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Vibe Check Tags */}
-        <section className="px-4">
+        {/* Vibe Tags */}
+        <section className="px-5">
           <div className="flex flex-wrap gap-2">
             {vibes.map((v) => (
               <button 
                 key={v.name} 
                 className={`
-                  relative px-3 py-1.5 rounded-full border text-[11px] font-bold transition-all hover:brightness-95 active:scale-95
-                  ${v.color}
+                  flex items-center space-x-2 px-3 py-2 rounded-xl border text-[10px] font-black tracking-wide uppercase transition-all hover:brightness-95 active:scale-95
+                  ${v.color} ${searchTerm === v.name ? 'ring-2 ring-current ring-offset-2' : ''}
                 `}
                 onClick={() => setSearchTerm(v.name)}
               >
-                {v.animate && (
-                  <span className="absolute top-0 right-0 -mt-0.5 -mr-0.5 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                  </span>
-                )}
-                {v.name}
+                {v.icon && <v.icon className="w-3 h-3" />}
+                <span>{v.name}</span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Main Content: Masonry Grid */}
-        <section className="px-2">
-           <h3 className="px-2 mb-3 text-sm font-bold text-gray-900 uppercase tracking-wider text-xs text-gray-400">Explore</h3>
-           <div className="columns-2 gap-2 space-y-2">
-              {filteredFeed.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className="break-inside-avoid relative rounded-xl overflow-hidden bg-gray-100 cursor-pointer group"
-                    onClick={() => setActiveFeedPostId(item.id)}
-                  >
-                      <img src={item.imageUrl} alt="" className="w-full h-auto object-cover" />
-                      
-                      {/* Overlay Info */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      
-                      {/* Video Icon */}
-                      {item.mediaType === 'video' && (
-                          <div className="absolute top-2 right-2">
-                              <Play className="w-4 h-4 text-white fill-white/50 drop-shadow-sm" />
-                          </div>
-                      )}
-
-                      <div className="absolute bottom-2 left-2 right-2 text-white">
-                          <p className="text-xs font-bold line-clamp-1 drop-shadow-md">{item.businessName}</p>
-                          <div className="flex items-center text-[10px] opacity-90 mt-0.5">
-                              <img src={item.author.avatarUrl} className="w-3 h-3 rounded-full mr-1" alt="" />
-                              <span className="truncate">@{item.author.username}</span>
-                          </div>
-                      </div>
-                  </div>
-              ))}
-           </div>
-           {filteredFeed.length === 0 && (
-                <div className="text-center py-12 text-gray-400 text-sm">
-                    No results found for "{searchTerm}"
-                </div>
+        {/* Masonry Grid */}
+        <section className="px-3">
+          <div className="px-2 mb-4 flex items-center justify-between">
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              {filteredFeed.length} {filteredFeed.length === 1 ? 'Result' : 'Results'}
+            </h3>
+            {(selectedCuisine || minRating || searchTerm) && (
+              <button 
+                onClick={() => { setSearchTerm(''); setSelectedCuisine(null); setMinRating(null); }}
+                className="text-[9px] font-black text-orange-600 uppercase tracking-widest"
+              >
+                Reset Filters
+              </button>
             )}
+          </div>
+          
+          <div className="columns-2 gap-2.5 space-y-2.5">
+            {filteredFeed.map((item) => (
+              <div 
+                key={item.id} 
+                className="break-inside-avoid relative rounded-[1.25rem] overflow-hidden bg-gray-100 cursor-pointer group shadow-sm"
+                onClick={() => setActiveFeedPostId(item.id)}
+              >
+                <img src={item.imageUrl} alt="" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" />
+                
+                {item.mediaType === 'video' && (
+                  <div className="absolute top-2.5 right-2.5 z-10 p-1.5 bg-black/40 backdrop-blur-xl rounded-lg border border-white/20">
+                    <Play className="w-3.5 h-3.5 text-white fill-white shadow-xl" />
+                  </div>
+                )}
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+
+                <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white pointer-events-none transition-transform duration-300 group-hover:-translate-y-1">
+                  <p className="text-[10px] font-black line-clamp-1 drop-shadow-md tracking-tight">{item.businessName}</p>
+                  <div className="flex items-center text-[8px] font-bold opacity-80 mt-1 uppercase tracking-widest">
+                    <img src={item.author.avatarUrl} className="w-3.5 h-3.5 rounded-full mr-1.5 border border-white/50" alt="" />
+                    <span className="truncate">@{item.author.username}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {filteredFeed.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-24 text-center px-10">
+              <div className="p-6 bg-gray-50 rounded-full mb-5 border border-gray-100">
+                <Search className="w-10 h-10 text-gray-200" />
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No cravings matched your filters</p>
+              <button onClick={() => { setSearchTerm(''); setSelectedCuisine(null); setMinRating(null); }} className="mt-4 text-[10px] font-black text-orange-600 uppercase tracking-widest hover:underline">Clear all filters</button>
+            </div>
+          )}
         </section>
 
       </div>

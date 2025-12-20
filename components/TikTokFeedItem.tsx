@@ -1,6 +1,7 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Review, ContentType } from '../types';
-import { Star, MessageCircle, Heart, Share2, MapPin, BadgeCheck, Play, Loader2, Bookmark } from 'lucide-react';
+import { Star, MessageCircle, Heart, Share2, MapPin, BadgeCheck, Loader2, Bookmark, CheckCircle2, XCircle } from 'lucide-react';
 
 interface TikTokFeedItemProps {
   item: Review;
@@ -13,372 +14,281 @@ interface TikTokFeedItemProps {
   onReadMore?: () => void;
 }
 
-export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, onInteractionComplete, onOpenProfile, onSaveClick, onCommentsClick, onShareClick, onReadMore }) => {
+export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, onOpenProfile, onSaveClick, onCommentsClick, onShareClick, onReadMore, onInteractionComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isBusinessPost = item.type === ContentType.BUSINESS_POST;
   
-  // Media State
   const [isPlaying, setIsPlaying] = useState(true);
   const [mediaError, setMediaError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Interaction State
   const [lastTap, setLastTap] = useState<number>(0);
   const [showBigHeart, setShowBigHeart] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   
-  // Swipe State
-  const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [voteState, setVoteState] = useState<'none' | 'agreed' | 'disagreed'>('none');
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
-  // Reset states when item changes
+  const startX = useRef<number | null>(null);
+
   useEffect(() => {
     setMediaError(false);
     setIsLoading(true);
     setVoteState('none');
     setDragX(0);
-    setShowBigHeart(false);
-    setIsSaved(false);
+    setIsAdvancing(false);
   }, [item.id]);
 
-  // Handle auto-play based on active state
   useEffect(() => {
     if (item.mediaType === 'video' && videoRef.current && !mediaError) {
       if (isActive) {
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => setIsPlaying(true))
-            .catch(error => {
-              console.log("Autoplay prevented:", error);
-              setIsPlaying(false);
-            });
-        }
-      } else {
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-        setIsPlaying(false);
+        videoRef.current.play().catch(() => setIsPlaying(false));
+      } else { 
+        videoRef.current.pause(); 
+        videoRef.current.currentTime = 0; 
       }
     }
   }, [isActive, item.mediaType, mediaError]);
 
-  const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
-    if (isDragging || Math.abs(dragX) > 5) return;
-
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-    
-    if (now - lastTap < DOUBLE_TAP_DELAY) {
-        handleDoubleTap();
-    } else {
-        togglePlay();
-    }
-    setLastTap(now);
-  };
-
-  const handleDoubleTap = () => {
-    setShowBigHeart(true);
-    triggerVote('agreed');
-    setTimeout(() => setShowBigHeart(false), 1000);
-  };
-
-  const togglePlay = () => {
-    if (item.mediaType === 'video' && videoRef.current && !mediaError) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleMediaLoaded = () => setIsLoading(false);
-  const handleMediaError = () => {
-    console.error(`Failed to load media for item ${item.id}`);
-    setMediaError(true);
-    setIsLoading(false);
-  };
-
-  // --- ACTIONS ---
-
-  const handleBookmark = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setIsSaved(true);
-      if (onSaveClick) onSaveClick();
-  };
-
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onShareClick) onShareClick();
-  };
-
-  const handleComments = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onCommentsClick) onCommentsClick();
-  };
-
-  // --- SWIPE / DRAG LOGIC ---
-
-  const handleDragStart = (clientX: number) => {
-    setDragStart(clientX);
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!e.isPrimary || isAdvancing) return;
+    startX.current = e.clientX;
     setIsDragging(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const handleDragMove = (clientX: number) => {
-    if (dragStart === null) return;
-    const diff = clientX - dragStart;
-    setDragX(diff);
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging || startX.current === null || isAdvancing) return;
+    const diff = e.clientX - startX.current;
+    
+    // Smooth horizontal tracking
+    if (Math.abs(diff) > 2) {
+        setDragX(diff);
+    }
   };
 
-  const handleDragEnd = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging) return;
     setIsDragging(false);
-    setDragStart(null);
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
 
-    const threshold = 100; 
-    if (dragX > threshold) {
-      triggerVote('agreed');
+    const threshold = 100;
+    const now = Date.now();
+
+    if (Math.abs(dragX) < 10) {
+        // Handle Tap
+        if (now - lastTap < 300) { 
+            setShowBigHeart(true); 
+            setVoteState('agreed'); 
+            setTimeout(() => setShowBigHeart(false), 800); 
+        } else {
+            if (item.mediaType === 'video' && videoRef.current) {
+                if (isPlaying) videoRef.current.pause(); else videoRef.current.play();
+                setIsPlaying(!isPlaying);
+            }
+        }
+        setLastTap(now);
+    } else if (dragX > threshold) {
+        // AGREE - Non-sticky decision
+        setVoteState('agreed');
+        if (!isAdvancing) {
+          setIsAdvancing(true);
+          // Reduced delay to 600ms for snappier feedback
+          setTimeout(() => {
+            onInteractionComplete?.();
+            setIsAdvancing(false);
+          }, 600);
+        }
     } else if (dragX < -threshold) {
-      triggerVote('disagreed');
-    } else {
-      setDragX(0); 
+        // NOPE - Non-sticky decision
+        setVoteState('disagreed');
+        if (!isAdvancing) {
+          setIsAdvancing(true);
+          // Reduced delay to 600ms for snappier feedback
+          setTimeout(() => {
+            onInteractionComplete?.();
+            setIsAdvancing(false);
+          }, 600);
+        }
     }
+
+    // Always snap back to center immediately so content is never "lost"
+    setDragX(0);
+    startX.current = null;
   };
 
-  const triggerVote = (type: 'agreed' | 'disagreed' | 'none') => {
-    setVoteState(type);
-    if (type === 'none') return;
-    setTimeout(() => setDragX(0), 200);
-    if (onInteractionComplete && (Math.abs(dragX) > 100)) {
-       onInteractionComplete();
-    }
-  };
-
-  const preventNativeDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-  };
-
-  const onTouchStart = (e: React.TouchEvent) => handleDragStart(e.touches[0].clientX);
-  const onTouchMove = (e: React.TouchEvent) => handleDragMove(e.touches[0].clientX);
-  const onTouchEnd = () => handleDragEnd();
-  const onMouseDown = (e: React.MouseEvent) => handleDragStart(e.clientX);
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      e.preventDefault();
-      handleDragMove(e.clientX);
-    }
-  };
-  const onMouseUp = () => handleDragEnd();
-  const onMouseLeave = () => { if (isDragging) handleDragEnd(); };
-
-  const rotation = dragX * 0.05; 
-  const opacityAgree = Math.min(Math.max(dragX / 100, 0), 1);
-  const opacityDisagree = Math.min(Math.max(-dragX / 100, 0), 1);
-  const showVideo = item.mediaType === 'video' && item.videoUrl && !mediaError;
+  // Logic to show stamps ONLY while dragging for a clean "not sticky" feel
+  // We use dragX to drive opacity so they fade as the card snaps back
+  const agreeOpacity = Math.min(1, Math.max(0, (dragX - 30) / 70));
+  const nopeOpacity = Math.min(1, Math.max(0, (-dragX - 30) / 70));
+  
+  const stampScale = 1 + Math.min(0.1, Math.max(0, (Math.abs(dragX) - 30) / 300));
 
   return (
-    <div className="relative w-full h-full bg-black snap-start flex-shrink-0 overflow-hidden perspective-1000 cursor-grab active:cursor-grabbing select-none">
-      
-      {/* Swipeable Container */}
+    <div className="relative w-full h-full bg-black snap-start flex-shrink-0 overflow-hidden select-none">
       <div 
-        className="w-full h-full relative transition-transform duration-200 ease-out origin-bottom"
-        style={{
-            transform: `translateX(${dragX}px) rotate(${rotation}deg)`,
-            transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        className="w-full h-full relative touch-none pointer-events-auto"
+        style={{ 
+          transform: `translateX(${dragX}px) rotate(${dragX * 0.01}deg)`, 
+          transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)' 
         }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseLeave}
-        onClick={handleTap}
-        onDragStart={preventNativeDrag}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onPointerLeave={isDragging ? handlePointerUp : undefined}
+        onDragStart={(e) => e.preventDefault()}
       >
+        {/* Voting Stamps - These are now purely dynamic based on drag offset */}
+        <div 
+          className="absolute top-[22%] left-12 z-30 border-[5px] border-emerald-500 rounded-2xl px-5 py-2 pointer-events-none transition-opacity duration-150" 
+          style={{ 
+            opacity: agreeOpacity, 
+            transform: `rotate(-12deg) scale(${stampScale})`
+          }}
+        >
+          <span className="text-4xl font-black text-emerald-500 uppercase tracking-tighter drop-shadow-2xl flex items-center gap-2">
+            AGREE <CheckCircle2 className="w-8 h-8" />
+          </span>
+        </div>
         
-        {/* BIG HEART ANIMATION */}
+        <div 
+          className="absolute top-[22%] right-12 z-30 border-[5px] border-rose-500 rounded-2xl px-5 py-2 pointer-events-none transition-opacity duration-150" 
+          style={{ 
+            opacity: nopeOpacity, 
+            transform: `rotate(12deg) scale(${stampScale})`
+          }}
+        >
+          <span className="text-4xl font-black text-rose-500 uppercase tracking-tighter drop-shadow-2xl flex items-center gap-2">
+            NOPE <XCircle className="w-8 h-8" />
+          </span>
+        </div>
+
         {showBigHeart && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-                <Heart className="w-32 h-32 text-white fill-white animate-[ping_0.5s_ease-out_reverse] drop-shadow-2xl" />
-            </div>
+          <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-scale-in">
+            <Heart className="w-32 h-32 text-white fill-white drop-shadow-2xl" />
+          </div>
         )}
 
-        {/* TINDER STAMPS */}
-        <div 
-            className="absolute top-24 left-8 z-30 border-4 border-green-500 rounded-lg px-4 py-2 transform -rotate-12 pointer-events-none transition-opacity duration-300"
-            style={{ opacity: dragX > 0 ? opacityAgree : 0 }}
-        >
-            <span className="text-4xl font-black text-green-500 tracking-widest uppercase">AGREE</span>
-        </div>
-
-        <div 
-            className="absolute top-24 right-8 z-30 border-4 border-red-500 rounded-lg px-4 py-2 transform rotate-12 pointer-events-none transition-opacity duration-300"
-            style={{ opacity: dragX < 0 ? opacityDisagree : 0 }}
-        >
-             <span className="text-4xl font-black text-red-500 tracking-widest uppercase">NOPE</span>
-        </div>
-
-        {/* Media Content */}
-        <div className="absolute inset-0 bg-gray-900">
+        {/* Media Layer */}
+        <div className="absolute inset-0 bg-black pointer-events-none">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
-              <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <Loader2 className="w-8 h-8 text-white/30 animate-spin" />
             </div>
           )}
-
-          {showVideo ? (
-            <>
-              <video
-                ref={videoRef}
-                src={item.videoUrl}
-                className="w-full h-full object-cover"
-                loop
-                muted
-                playsInline
-                draggable={false}
-                onLoadedData={handleMediaLoaded}
-                onError={handleMediaError}
-                onDragStart={preventNativeDrag}
-              />
-              {!isPlaying && !isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                  <Play className="w-16 h-16 text-white/80 fill-white/80" />
-                </div>
-              )}
-            </>
+          {item.mediaType === 'video' && item.videoUrl && !mediaError ? (
+            <video 
+              ref={videoRef} 
+              src={item.videoUrl} 
+              className="w-full h-full object-cover" 
+              loop 
+              muted 
+              autoPlay
+              playsInline 
+              onLoadedData={() => setIsLoading(false)} 
+              onError={() => { setMediaError(true); setIsLoading(false); }}
+              draggable="false"
+            />
           ) : (
-            <img
-              src={item.imageUrl}
-              alt={item.businessName}
-              className="w-full h-full object-cover"
-              draggable={false}
-              onLoad={handleMediaLoaded}
-              onError={handleMediaError}
-              onDragStart={preventNativeDrag}
+            <img 
+              src={item.imageUrl} 
+              className="w-full h-full object-cover" 
+              onLoad={() => setIsLoading(false)} 
+              onError={() => setIsLoading(false)} 
+              draggable="false"
             />
           )}
         </div>
+        
+        {/* Deep Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 pointer-events-none" />
 
-        {/* Overlay Gradient - Stronger bottom for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent via-60% to-black/95 pointer-events-none" />
-
-        {/* Right Sidebar Actions */}
-        {/* Positioned at bottom-[70px] as requested */}
-        <div className="absolute bottom-[70px] right-2 flex flex-col items-center space-y-4 z-20 pointer-events-auto">
-          {/* Avatar */}
-          <div className="relative group cursor-pointer" onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}>
-            <div className="w-11 h-11 rounded-full border-2 border-white p-0.5 overflow-hidden bg-gray-800 transition-transform group-active:scale-90 shadow-lg">
-              <img 
-                src={item.author.avatarUrl} 
-                alt={item.author.displayName} 
-                className="w-full h-full rounded-full object-cover"
-                draggable={false}
-              />
+        {/* Mini Sidebar */}
+        <div className="absolute bottom-28 right-3 flex flex-col items-center space-y-5 z-20 pointer-events-auto">
+          <div 
+            className="relative cursor-pointer active:scale-90 transition-transform" 
+            onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}
+          >
+            <div className="w-11 h-11 rounded-full border border-white/40 overflow-hidden shadow-lg">
+              <img src={item.author.avatarUrl} className="w-full h-full object-cover" draggable="false" />
             </div>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500 rounded-full p-0.5 shadow-sm hover:scale-110 transition-transform">
-              <div className="w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold text-white">+</div>
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-rose-600 rounded-full w-4 h-4 flex items-center justify-center border border-white shadow-sm">
+              <span className="text-[10px] font-black text-white">+</span>
             </div>
           </div>
 
-          {/* Like */}
-          <button 
-            className="flex flex-col items-center space-y-0.5 group"
-            onClick={(e) => { e.stopPropagation(); triggerVote(voteState === 'agreed' ? 'none' : 'agreed'); }}
-          >
-            <div className={`p-2 backdrop-blur-md rounded-full transition-all duration-300 shadow-lg ${voteState === 'agreed' ? 'bg-green-500 scale-110' : 'bg-black/20 hover:bg-black/40 border border-white/10'}`}>
-              <Heart className={`w-7 h-7 transition-colors ${voteState === 'agreed' ? 'fill-white text-white' : 'text-white fill-white/10 group-hover:text-red-500'}`} />
+          <button className="flex flex-col items-center group" onClick={(e) => { e.stopPropagation(); setVoteState(voteState === 'agreed' ? 'none' : 'agreed'); }}>
+            <div className={`p-2.5 backdrop-blur-md rounded-full transition-all duration-300 ${voteState === 'agreed' ? 'bg-rose-500 scale-110' : 'bg-black/20 border border-white/10'}`}>
+              <Heart className={`w-6 h-6 ${voteState === 'agreed' ? 'fill-white text-white' : 'text-white'}`} />
             </div>
-            <span className="text-[10px] font-bold text-white drop-shadow-md">
-                {item.agreeCount + (voteState === 'agreed' ? 1 : 0)}
-            </span>
+            <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">{item.agreeCount + (voteState === 'agreed' ? 1 : 0)}</span>
           </button>
 
-          {/* Comments */}
-          <button className="flex flex-col items-center space-y-0.5 group" onClick={handleComments}>
-            <div className="p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10">
-              <MessageCircle className="w-7 h-7 text-white fill-white/10 group-hover:fill-blue-500 group-hover:text-blue-500 transition-colors" />
+          <button className="flex flex-col items-center group" onClick={(e) => { e.stopPropagation(); onCommentsClick?.(); }}>
+            <div className="p-2.5 bg-black/20 backdrop-blur-md rounded-full border border-white/10 transition-all active:scale-95">
+              <MessageCircle className="w-6 h-6 text-white" />
             </div>
-            <span className="text-[10px] font-bold text-white drop-shadow-md">
-                {item.commentCount}
-            </span>
-          </button>
-          
-          {/* Save */}
-          <button className="flex flex-col items-center space-y-0.5 group" onClick={handleBookmark}>
-            <div className={`p-2 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10 ${isSaved ? 'bg-orange-500 border-transparent' : 'bg-black/20 hover:bg-black/40'}`}>
-              <Bookmark className={`w-7 h-7 transition-colors ${isSaved ? 'text-white fill-white' : 'text-white fill-white/10 group-hover:text-orange-400'}`} />
-            </div>
-            <span className="text-[10px] font-bold text-white drop-shadow-md">
-                Save
-            </span>
+            <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">{item.commentCount}</span>
           </button>
 
-          {/* Share */}
-          <button className="flex flex-col items-center space-y-0.5 group" onClick={handleShare}>
-            <div className="p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full group-active:scale-90 transition-transform shadow-lg border border-white/10">
-               <Share2 className="w-7 h-7 text-white group-hover:text-green-400 transition-colors" />
+          <button className="flex flex-col items-center group" onClick={(e) => { e.stopPropagation(); setIsSaved(!isSaved); onSaveClick?.(); }}>
+            <div className={`p-2.5 backdrop-blur-md rounded-full border border-white/10 transition-all active:scale-95 ${isSaved ? 'bg-orange-500' : 'bg-black/20'}`}>
+              <Bookmark className={`w-6 h-6 text-white ${isSaved ? 'fill-white' : ''}`} />
             </div>
-            <span className="text-[10px] font-bold text-white drop-shadow-md">
-                Share
-            </span>
+            <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">{isSaved ? 'Saved' : 'Save'}</span>
+          </button>
+
+          <button className="flex flex-col items-center group" onClick={(e) => { e.stopPropagation(); onShareClick?.(); }}>
+            <div className="p-2.5 bg-black/20 backdrop-blur-md rounded-full border border-white/10 transition-all active:scale-95">
+              <Share2 className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">Share</span>
           </button>
         </div>
 
-        {/* Bottom Info - Positioned at bottom-[70px] as requested */}
-        <div className="absolute bottom-[70px] left-0 right-16 px-4 z-10 flex flex-col justify-end pointer-events-auto drop-shadow-lg">
-          <div 
-            className="flex items-center space-x-2 mb-1.5 cursor-pointer w-fit"
-            onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}
-          >
-            <span className="font-black text-lg text-white shadow-black hover:underline tracking-wide drop-shadow-md">
-              @{item.author.username}
-            </span>
-            {isBusinessPost && (
-              <BadgeCheck className="w-5 h-5 text-blue-400 fill-white" />
-            )}
-            {!isBusinessPost && (
-              <div className="flex items-center bg-orange-600/90 backdrop-blur-md px-2 py-0.5 rounded-md space-x-1 shadow-sm border border-white/20">
-                  <span className="text-xs font-bold text-white">{item.rating?.toFixed(1)}</span>
-                  <Star className="w-3 h-3 fill-white text-white" />
+        {/* Info Area */}
+        <div className="absolute bottom-24 left-0 right-16 px-5 z-10 flex flex-col justify-end pointer-events-auto pb-4">
+          <div className="flex items-center space-x-2 mb-2 cursor-pointer w-fit" onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}>
+            <span className="font-bold text-base text-white drop-shadow-md tracking-tight">@{item.author.username}</span>
+            {isBusinessPost ? (
+              <BadgeCheck className="w-4 h-4 text-sky-400 fill-white" />
+            ) : (
+              <div className="flex items-center bg-orange-600/90 backdrop-blur-sm px-1.5 py-0.5 rounded-lg space-x-1 border border-white/10">
+                  <span className="text-[9px] font-black text-white">{item.rating?.toFixed(1)}</span>
+                  <Star className="w-2.5 h-2.5 fill-white text-white" />
               </div>
             )}
           </div>
 
           <div 
-            className="flex items-center space-x-1 mb-2 bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-md self-start px-2 py-1 rounded-lg cursor-pointer border border-white/10"
+            className="flex items-center space-x-1.5 mb-3 bg-white/10 hover:bg-white/20 backdrop-blur-md self-start px-3 py-1.5 rounded-xl border border-white/10 transition-all shadow-lg cursor-pointer active:scale-95" 
             onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.businessId, true); }}
           >
             <MapPin className="w-3 h-3 text-white" />
-            <span className="text-[10px] font-bold text-white tracking-wide">{item.businessName}</span>
+            <span className="text-[10px] font-black text-white tracking-wide uppercase">{item.businessName}</span>
           </div>
 
-          <div className="mb-2.5">
-             <p className="text-sm text-white/95 leading-relaxed font-medium drop-shadow-md transition-all line-clamp-2">
-                {item.text}
-             </p>
-             {item.text.length > 50 && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onReadMore?.(); }} 
-                  className="text-xs font-black text-white/80 mt-1 hover:text-white uppercase tracking-wider"
-                >
-                  more
-                </button>
+          <div className="mb-3 pr-2">
+             <p className="text-sm text-white/95 leading-snug font-medium line-clamp-2 drop-shadow-sm">{item.text}</p>
+             {item.text.length > 80 && (
+               <button 
+                onClick={(e) => { e.stopPropagation(); onReadMore?.(); }} 
+                className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest hover:text-white transition-colors"
+               >
+                 See more
+               </button>
              )}
           </div>
 
-          <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto no-scrollbar">
-            {item.tags?.map((tag) => (
-              <span key={tag} className="px-2 py-0.5 rounded-full bg-black/40 border border-white/20 text-[10px] font-bold text-white backdrop-blur-sm">
+          <div className="flex flex-wrap gap-2">
+            {item.tags?.slice(0, 3).map((tag) => (
+              <span key={tag} className="px-2 py-1 rounded-lg bg-black/30 border border-white/5 text-[9px] font-bold text-white/80 backdrop-blur-md">
                 #{tag}
               </span>
             ))}
           </div>
-
         </div>
       </div>
     </div>

@@ -42,7 +42,8 @@ export interface Business {
   website?: string;
   tags?: string[];
   ratingBreakdown?: { 5: number; 4: number; 3: number; 2: number; 1: number };
-  coordinates?: { x: number; y: number };
+  coordinates?: { x: number; y: number }; // Relative 0-100 coordinates
+  latLng?: [number, number]; // Real world coordinates for map
   distance?: string;
   walkingTime?: string;
 }
@@ -69,12 +70,12 @@ export interface Review {
   videoUrl?: string; 
   mediaType: 'image' | 'video';
   text: string;
-  timestamp: string; // ISO string or relative time
+  timestamp: string;
   agreeCount: number;
   disagreeCount: number;
   commentCount: number;
   tags?: string[];
-  isLocal?: boolean; // Flag for optimistic UI updates
+  isLocal?: boolean;
 }
 
 export interface Comment {
@@ -87,13 +88,14 @@ export interface Comment {
   likes: number;
 }
 
-// New Interface for the Creation Flow
 export interface DraftPost {
   businessId: string | null;
   businessName: string;
-  mediaFile: File | null; // Real file object for upload
+  mediaFile: File | null;
   mediaPreviewUrl: string;
   rating: number;
   text: string;
   tags: string[];
 }
+
+export type SearchRadius = 500 | 1000 | 2000 | 5000;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Home, Map as MapIcon, User, Plus } from 'lucide-react';
 
@@ -11,22 +12,19 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onCreateClick, isImmersive = false, headerContent }) => {
-  
-  // Logic to determine if we should render the header wrapper at all.
-  // If headerContent is explicitly null (not undefined), we hide the header completely.
   const shouldRenderHeader = headerContent !== null;
 
   return (
-    <div className="h-[100dvh] bg-gray-50 flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-gray-200 font-sans">
+    <div className="h-[100dvh] bg-gray-100 flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-gray-200 font-sans">
       
-      {/* Top Header */}
+      {/* Top Header - Refined for depth */}
       {shouldRenderHeader && (
-          <header className="z-30 absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-4 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
+          <header className="z-50 absolute top-0 left-0 right-0 h-24 flex items-start justify-between px-4 pointer-events-none pt-2">
              <div className="w-full pointer-events-auto">
                 {headerContent || (
-                    <div className="flex justify-between items-center w-full">
-                         <h1 className="text-xl font-black tracking-tight italic text-white drop-shadow-md">
-                            CraveRate
+                    <div className="flex justify-between items-center w-full px-5 pt-5">
+                         <h1 className="text-xl font-black tracking-tighter text-white drop-shadow-lg">
+                            Crave<span className="text-orange-500">Rate</span>
                         </h1>
                     </div>
                 )}
@@ -35,89 +33,81 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
       )}
 
       {/* Main Content Area */}
-      <main 
-        className={`flex-1 w-full relative pb-24 ${isImmersive ? 'overflow-hidden bg-black' : 'overflow-y-auto no-scrollbar'}`}
-      >
+      <main className={`flex-1 w-full relative h-full transition-colors duration-700 ${isImmersive ? 'bg-black' : 'bg-white'}`}>
         {children}
       </main>
 
-      {/* Modern Floating Navigation Dock */}
-      <nav className="absolute bottom-6 left-5 right-5 z-40">
+      {/* HYPER-MODERN FLOATING DOCK */}
+      <nav className="absolute bottom-6 left-6 right-6 z-50 pointer-events-none">
         <div 
           className={`
-            w-full h-[72px] rounded-3xl flex items-center justify-around px-2 shadow-2xl backdrop-blur-2xl border transition-all duration-500 ease-out
-            ${isImmersive 
-              ? 'bg-black/70 border-white/10 text-white/40 shadow-black/50' 
-              : 'bg-white/80 border-white/60 text-gray-400 shadow-orange-500/10'
-            }
+            w-full h-14 rounded-full flex items-center justify-between px-2 shadow-[0_10px_40px_rgba(0,0,0,0.2)] backdrop-blur-3xl border pointer-events-auto transition-all duration-500
+            ${isImmersive ? 'bg-white/10 border-white/10 text-white' : 'bg-white/80 border-black/[0.03] text-gray-400'}
           `}
         >
-          {/* Home */}
+          {/* Home Tab */}
           <button 
             onClick={() => onTabChange('home')}
-            className={`p-3 rounded-2xl transition-all duration-300 relative group 
-              ${activeTab === 'home' 
-                ? (isImmersive ? 'text-white bg-white/10' : 'text-orange-600 bg-orange-50') 
-                : 'hover:scale-110 active:scale-95'
-              }`}
+            className="relative flex-1 flex flex-col items-center justify-center h-full transition-all active:scale-90 group"
           >
+            <div className={`
+              absolute inset-y-1.5 inset-x-1 rounded-full transition-all duration-300
+              ${activeTab === 'home' ? (isImmersive ? 'bg-white/10' : 'bg-orange-50') : 'bg-transparent'}
+            `} />
             <Home 
-              className={`w-6 h-6 transition-all duration-300 ${activeTab === 'home' ? 'fill-current scale-110' : ''}`} 
-              strokeWidth={activeTab === 'home' ? 2.5 : 2} 
+              className={`w-5.5 h-5.5 z-10 transition-all duration-300 ${activeTab === 'home' ? 'text-orange-500 scale-110' : 'opacity-60 group-hover:opacity-100'}`} 
+              strokeWidth={activeTab === 'home' ? 2.5 : 2}
+              fill={activeTab === 'home' ? 'currentColor' : 'none'}
             />
-            {activeTab === 'home' && (
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-current rounded-full animate-pulse" />
-            )}
           </button>
 
-          {/* CREATE BUTTON - Elevated Floating Action */}
-          <div className="relative -top-6 group">
-            <button 
-                onClick={onCreateClick}
-                className="w-14 h-14 bg-gradient-to-tr from-orange-600 to-red-500 text-white rounded-full shadow-lg shadow-orange-500/40 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-active:scale-90"
-            >
-                <Plus className="w-8 h-8" />
-            </button>
-            {/* Glow effect behind button */}
-            <div className="absolute inset-0 rounded-full bg-orange-500 blur-lg opacity-40 group-hover:opacity-60 -z-10 transition-opacity" />
-          </div>
-
-          {/* Map */}
+          {/* Map Tab */}
           <button 
             onClick={() => onTabChange('map')}
-            className={`p-3 rounded-2xl transition-all duration-300 relative group
-              ${activeTab === 'map' 
-                ? 'text-orange-600 bg-orange-50' 
-                : (isImmersive ? 'hover:text-white' : 'hover:text-gray-600') + ' hover:scale-110 active:scale-95'
-              }`}
+            className="relative flex-1 flex flex-col items-center justify-center h-full transition-all active:scale-90 group"
           >
+            <div className={`
+              absolute inset-y-1.5 inset-x-1 rounded-full transition-all duration-300
+              ${activeTab === 'map' ? (isImmersive ? 'bg-white/10' : 'bg-orange-50') : 'bg-transparent'}
+            `} />
             <MapIcon 
-              className={`w-6 h-6 transition-all duration-300 ${activeTab === 'map' ? 'fill-current scale-110' : ''}`} 
+              className={`w-5.5 h-5.5 z-10 transition-all duration-300 ${activeTab === 'map' ? 'text-orange-500 scale-110' : 'opacity-60 group-hover:opacity-100'}`} 
+              strokeWidth={activeTab === 'map' ? 2.5 : 2}
+              fill={activeTab === 'map' ? 'currentColor' : 'none'}
             />
-            {activeTab === 'map' && (
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-current rounded-full" />
-            )}
           </button>
 
-          {/* Profile */}
+          {/* REFINED CENTRAL ACTION BUTTON */}
+          <div className="relative flex-1 flex items-center justify-center h-full">
+            <div className="absolute -top-1 w-14 h-14 bg-white/10 rounded-full blur-xl animate-pulse pointer-events-none" />
+            <button 
+                onClick={onCreateClick}
+                className="w-12 h-12 bg-gradient-to-tr from-orange-400 to-orange-600 text-white rounded-full shadow-[0_8px_20px_rgba(249,115,22,0.4)] flex items-center justify-center transition-all hover:scale-110 active:scale-90 group border-2 border-white/20 z-10"
+            >
+                <Plus className="w-7 h-7 group-hover:rotate-90 transition-all duration-500" strokeWidth={3} />
+            </button>
+          </div>
+
+          {/* Profile Tab */}
           <button 
             onClick={() => onTabChange('profile')}
-            className={`p-3 rounded-2xl transition-all duration-300 relative group
-              ${activeTab === 'profile' 
-                ? 'text-orange-600 bg-orange-50' 
-                : (isImmersive ? 'hover:text-white' : 'hover:text-gray-600') + ' hover:scale-110 active:scale-95'
-              }`}
+            className="relative flex-1 flex flex-col items-center justify-center h-full transition-all active:scale-90 group"
           >
+            <div className={`
+              absolute inset-y-1.5 inset-x-1 rounded-full transition-all duration-300
+              ${activeTab === 'profile' ? (isImmersive ? 'bg-white/10' : 'bg-orange-50') : 'bg-transparent'}
+            `} />
             <User 
-              className={`w-6 h-6 transition-all duration-300 ${activeTab === 'profile' ? 'fill-current scale-110' : ''}`} 
+              className={`w-5.5 h-5.5 z-10 transition-all duration-300 ${activeTab === 'profile' ? 'text-orange-500 scale-110' : 'opacity-60 group-hover:opacity-100'}`} 
+              strokeWidth={activeTab === 'profile' ? 2.5 : 2}
+              fill={activeTab === 'profile' ? 'currentColor' : 'none'}
             />
-            {activeTab === 'profile' && (
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-current rounded-full" />
-            )}
           </button>
-
         </div>
       </nav>
+      
+      {/* Bottom safe area gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-30" />
     </div>
   );
 };
