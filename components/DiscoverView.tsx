@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Search, Star, X, Play, Video } from 'lucide-react';
+import { Search, Star, X, Play, Video, Award } from 'lucide-react';
 import { MOCK_FEED, BUSINESSES } from '../mockData';
 import { TikTokFeedItem } from './TikTokFeedItem';
 
@@ -43,9 +42,13 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
     const itemRating = item.rating || biz?.rating || 0;
     const matchesRating = !minRating || itemRating >= minRating;
 
+    // Fixed redundant string comparison logic that caused TS union overlap errors
     if (q) {
-      if ((q === 'video' || q === 'video reviews') && item.mediaType !== 'video') return false;
-      if ((q === 'muckbang' || q === 'pov') && !item.tags?.some(tag => tag.toLowerCase().includes(q))) return false;
+      const isVideoKeyword = q === 'video' || q === 'video reviews';
+      const isSocialVibe = q === 'muckbang' || q === 'pov';
+      
+      if (isVideoKeyword && item.mediaType !== 'video') return false;
+      if (isSocialVibe && !item.tags?.some(tag => tag.toLowerCase().includes(q))) return false;
     }
 
     return matchesText && matchesCuisine && matchesRating;
@@ -123,6 +126,19 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({ onSaveClick }) => {
                 className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${selectedCuisine === c ? 'bg-orange-600 border-orange-600 text-white shadow-md' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
               >
                 {c}
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex space-x-2">
+            {[4, 4.5].map(val => (
+              <button 
+                key={val}
+                onClick={() => setMinRating(minRating === val ? null : val)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${minRating === val ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
+              >
+                <Award className={`w-3 h-3 ${minRating === val ? 'text-white' : 'text-amber-500'}`} />
+                <span>{val}+ Stars</span>
               </button>
             ))}
           </div>

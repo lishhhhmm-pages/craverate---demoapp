@@ -1,13 +1,14 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // Ensures relative paths for assets on GitHub Pages
+  base: './',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+  },
+  define: {
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
   }
 });

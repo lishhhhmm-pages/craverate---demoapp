@@ -6,6 +6,7 @@ import { Star, MessageCircle, Heart, Share2, MapPin, BadgeCheck, Loader2, Bookma
 interface TikTokFeedItemProps {
   item: Review;
   isActive: boolean;
+  isSaved?: boolean;
   onInteractionComplete?: () => void;
   onOpenProfile?: (id: string, isBusiness: boolean) => void;
   onSaveClick?: () => void;
@@ -14,7 +15,7 @@ interface TikTokFeedItemProps {
   onReadMore?: () => void;
 }
 
-export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, onOpenProfile, onSaveClick, onCommentsClick, onShareClick, onReadMore, onInteractionComplete }) => {
+export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, isSaved = false, onOpenProfile, onSaveClick, onCommentsClick, onShareClick, onReadMore, onInteractionComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isBusinessPost = item.type === ContentType.BUSINESS_POST;
   
@@ -23,7 +24,6 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
   const [isLoading, setIsLoading] = useState(true);
   const [lastTap, setLastTap] = useState<number>(0);
   const [showBigHeart, setShowBigHeart] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -62,7 +62,6 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
     if (!isDragging || startX.current === null || isAdvancing) return;
     const diff = e.clientX - startX.current;
     
-    // Smooth horizontal tracking
     if (Math.abs(diff) > 2) {
         setDragX(diff);
     }
@@ -77,7 +76,7 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
     const now = Date.now();
 
     if (Math.abs(dragX) < 10) {
-        // Handle Tap
+        // Handle Tap on the main card area
         if (now - lastTap < 300) { 
             setShowBigHeart(true); 
             setVoteState('agreed'); 
@@ -90,22 +89,18 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
         }
         setLastTap(now);
     } else if (dragX > threshold) {
-        // AGREE - Non-sticky decision
         setVoteState('agreed');
         if (!isAdvancing) {
           setIsAdvancing(true);
-          // Reduced delay to 600ms for snappier feedback
           setTimeout(() => {
             onInteractionComplete?.();
             setIsAdvancing(false);
           }, 600);
         }
     } else if (dragX < -threshold) {
-        // NOPE - Non-sticky decision
         setVoteState('disagreed');
         if (!isAdvancing) {
           setIsAdvancing(true);
-          // Reduced delay to 600ms for snappier feedback
           setTimeout(() => {
             onInteractionComplete?.();
             setIsAdvancing(false);
@@ -113,16 +108,12 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
         }
     }
 
-    // Always snap back to center immediately so content is never "lost"
     setDragX(0);
     startX.current = null;
   };
 
-  // Logic to show stamps ONLY while dragging for a clean "not sticky" feel
-  // We use dragX to drive opacity so they fade as the card snaps back
   const agreeOpacity = Math.min(1, Math.max(0, (dragX - 30) / 70));
   const nopeOpacity = Math.min(1, Math.max(0, (-dragX - 30) / 70));
-  
   const stampScale = 1 + Math.min(0.1, Math.max(0, (Math.abs(dragX) - 30) / 300));
 
   return (
@@ -140,13 +131,10 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
         onPointerLeave={isDragging ? handlePointerUp : undefined}
         onDragStart={(e) => e.preventDefault()}
       >
-        {/* Voting Stamps - These are now purely dynamic based on drag offset */}
+        {/* Voting Stamps */}
         <div 
           className="absolute top-[22%] left-12 z-30 border-[5px] border-emerald-500 rounded-2xl px-5 py-2 pointer-events-none transition-opacity duration-150" 
-          style={{ 
-            opacity: agreeOpacity, 
-            transform: `rotate(-12deg) scale(${stampScale})`
-          }}
+          style={{ opacity: agreeOpacity, transform: `rotate(-12deg) scale(${stampScale})` }}
         >
           <span className="text-4xl font-black text-emerald-500 uppercase tracking-tighter drop-shadow-2xl flex items-center gap-2">
             AGREE <CheckCircle2 className="w-8 h-8" />
@@ -155,10 +143,7 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
         
         <div 
           className="absolute top-[22%] right-12 z-30 border-[5px] border-rose-500 rounded-2xl px-5 py-2 pointer-events-none transition-opacity duration-150" 
-          style={{ 
-            opacity: nopeOpacity, 
-            transform: `rotate(12deg) scale(${stampScale})`
-          }}
+          style={{ opacity: nopeOpacity, transform: `rotate(12deg) scale(${stampScale})` }}
         >
           <span className="text-4xl font-black text-rose-500 uppercase tracking-tighter drop-shadow-2xl flex items-center gap-2">
             NOPE <XCircle className="w-8 h-8" />
@@ -202,11 +187,14 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
           )}
         </div>
         
-        {/* Deep Gradient Overlay */}
+        {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 pointer-events-none" />
 
         {/* Mini Sidebar */}
-        <div className="absolute bottom-28 right-3 flex flex-col items-center space-y-5 z-20 pointer-events-auto">
+        <div 
+          className="absolute bottom-28 right-3 flex flex-col items-center space-y-5 z-20 pointer-events-auto"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <div 
             className="relative cursor-pointer active:scale-90 transition-transform" 
             onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}
@@ -233,7 +221,7 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
             <span className="text-[10px] font-bold text-white mt-1 drop-shadow-md">{item.commentCount}</span>
           </button>
 
-          <button className="flex flex-col items-center group" onClick={(e) => { e.stopPropagation(); setIsSaved(!isSaved); onSaveClick?.(); }}>
+          <button className="flex flex-col items-center group" onClick={(e) => { e.stopPropagation(); onSaveClick?.(); }}>
             <div className={`p-2.5 backdrop-blur-md rounded-full border border-white/10 transition-all active:scale-95 ${isSaved ? 'bg-orange-500' : 'bg-black/20'}`}>
               <Bookmark className={`w-6 h-6 text-white ${isSaved ? 'fill-white' : ''}`} />
             </div>
@@ -249,7 +237,10 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
         </div>
 
         {/* Info Area */}
-        <div className="absolute bottom-24 left-0 right-16 px-5 z-10 flex flex-col justify-end pointer-events-auto pb-4">
+        <div 
+          className="absolute bottom-24 left-0 right-16 px-5 z-10 flex flex-col justify-end pointer-events-auto pb-4"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center space-x-2 mb-2 cursor-pointer w-fit" onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}>
             <span className="font-bold text-base text-white drop-shadow-md tracking-tight">@{item.author.username}</span>
             {isBusinessPost ? (

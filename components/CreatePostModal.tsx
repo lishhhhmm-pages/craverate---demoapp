@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Search, MapPin, Camera, Star, ChevronLeft, Upload, Loader2, Wand2 } from 'lucide-react';
 import { Business, DraftPost } from '../types';
@@ -73,11 +72,12 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
   };
 
   const handleAiEdit = async () => {
-    if (!aiPrompt.trim() || !draft.mediaPreviewUrl) return;
+    const apiKey = process.env.API_KEY;
+    if (!apiKey || !aiPrompt.trim() || !draft.mediaPreviewUrl) return;
     setIsAiEditing(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      const ai = new GoogleGenAI({ apiKey });
       const response = await fetch(draft.mediaPreviewUrl);
       const blob = await response.blob();
       const base64Data = await blobToBase64(blob);
@@ -99,13 +99,15 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
         },
       });
 
-      const parts = result.candidates?.[0]?.content?.parts || [];
-      for (const part of parts) {
-        if (part.inlineData) {
-          const newBase64 = part.inlineData.data;
-          const newUrl = `data:image/png;base64,${newBase64}`;
-          setDraft(prev => ({ ...prev, mediaPreviewUrl: newUrl }));
-          break;
+      const parts = result.candidates?.[0]?.content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData) {
+            const newBase64 = part.inlineData.data;
+            const newUrl = `data:image/png;base64,${newBase64}`;
+            setDraft(prev => ({ ...prev, mediaPreviewUrl: newUrl }));
+            break;
+          }
         }
       }
       setAiPrompt('');

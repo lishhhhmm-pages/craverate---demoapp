@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [activePostIdForComments, setActivePostIdForComments] = useState<string | null>(null);
   const [reviewToRead, setReviewToRead] = useState<Review | null>(null);
   const [reviewTargetBusiness, setReviewTargetBusiness] = useState<Business | null>(null);
+  const [savedItemIds, setSavedItemIds] = useState<Set<string>>(new Set());
 
   const [recentSearches, setRecentSearches] = useState([
     'Muckbangs', 'POV Review', 'Gyro King', '@burger_boss'
@@ -374,6 +375,7 @@ const App: React.FC = () => {
                               key={item.id} 
                               item={item} 
                               isActive={index === currentFeedIndex} 
+                              isSaved={savedItemIds.has(item.id)}
                               onOpenProfile={(id, isBiz) => setViewedProfile({id, isBusiness: isBiz})} 
                               onSaveClick={() => { setItemToSaveId(item.id); setIsSaveModalOpen(true); }} 
                               onCommentsClick={() => { setActivePostIdForComments(item.id); setIsCommentsModalOpen(true); }} 
@@ -397,7 +399,24 @@ const App: React.FC = () => {
             </div>
         )}
         
-        <SaveCollectionModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} existingLists={userLists} onSaveToExisting={async (id) => { await api.addToList(id, itemToSaveId!); fetchData(); }} onCreateNewList={async (n, p, c) => { const l = await api.createList(n,p,c); if(itemToSaveId) await api.addToList(l.id, itemToSaveId); fetchData(); }} />
+        <SaveCollectionModal 
+          isOpen={isSaveModalOpen} 
+          onClose={() => setIsSaveModalOpen(false)} 
+          existingLists={userLists} 
+          onSaveToExisting={async (id) => { 
+            if (itemToSaveId) {
+              await api.addToList(id, itemToSaveId); 
+              setSavedItemIds(prev => new Set(prev).add(itemToSaveId));
+            }
+          }} 
+          onCreateNewList={async (n, p, c) => { 
+            const l = await api.createList(n,p,c); 
+            if(itemToSaveId) {
+              await api.addToList(l.id, itemToSaveId); 
+              setSavedItemIds(prev => new Set(prev).add(itemToSaveId));
+            }
+          }} 
+        />
         <CreatePostModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setReviewTargetBusiness(null); }} onPostCreated={fetchData} preselectedBusiness={reviewTargetBusiness} />
         <CommentsModal isOpen={isCommentsModalOpen} onClose={() => setIsCommentsModalOpen(false)} postId={activePostIdForComments} />
         <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Send, Heart } from 'lucide-react';
 import { Comment } from '../types';
@@ -77,7 +78,7 @@ export const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, p
   if (!isOpen && !isAnimating) return null;
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-end justify-center pointer-events-none ${isOpen ? 'pointer-events-auto' : ''}`}>
+    <div className={`fixed inset-0 z-[70] flex items-end justify-center pointer-events-none ${isOpen ? 'pointer-events-auto' : ''}`}>
       {/* Backdrop */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`} 
@@ -121,15 +122,15 @@ export const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, p
           ))}
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 border-t border-gray-100 pb-8 bg-white safe-pb">
+        {/* Input Area - Increased padding to clear navigation and safe areas */}
+        <div className="p-4 border-t border-gray-100 pb-10 bg-white safe-pb">
           <div className="flex items-center gap-3">
             <img src={USERS.u1.avatarUrl} className="w-8 h-8 rounded-full border border-gray-100" alt="" />
             <div className="flex-1 relative">
                 <input 
                     type="text" 
                     placeholder="Add a comment..." 
-                    className="w-full bg-gray-100 rounded-full pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    className="w-full bg-gray-100 rounded-full pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all text-gray-900"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     onKeyDown={handleKeyPress}
