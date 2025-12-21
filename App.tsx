@@ -121,6 +121,11 @@ const App: React.FC = () => {
       if (feedContainerRef.current) feedContainerRef.current.scrollTo({ top: 0 });
   };
 
+  const handleTagClick = (tag: string) => {
+      performSearch(tag);
+      setReviewToRead(null);
+  };
+
   const handleGridItemClick = (itemId: string) => {
       const sourceFeed = searchQuery ? filteredFeed : allPosts;
       const index = sourceFeed.findIndex(i => i.id === itemId);
@@ -137,6 +142,24 @@ const App: React.FC = () => {
                 });
             }
           }, 0);
+      }
+  };
+
+  const handlePostNavigation = (post: Review) => {
+      setViewedProfile(null);
+      setActiveTab('home');
+      setSearchQuery('');
+      setIsGridView(false);
+      
+      const index = feed.findIndex(f => f.id === post.id);
+      if (index >= 0) {
+          setCurrentFeedIndex(index);
+          setTimeout(() => {
+              if (feedContainerRef.current) {
+                  const itemHeight = feedContainerRef.current.clientHeight;
+                  feedContainerRef.current.scrollTo({ top: index * itemHeight, behavior: 'auto' });
+              }
+          }, 50);
       }
   };
 
@@ -337,7 +360,16 @@ const App: React.FC = () => {
     >
         {viewedProfile ? (
             <div className="h-full w-full overflow-hidden">
-                <ProfileView profileId={viewedProfile.id} isBusiness={viewedProfile.isBusiness} onBack={() => setViewedProfile(null)} customLists={viewedProfile.id === 'u1' ? userLists : undefined} onSaveClick={(id) => { setItemToSaveId(id); setIsSaveModalOpen(true); }} onWriteReview={(b) => { setReviewTargetBusiness(b); setIsCreateModalOpen(true); }} />
+                <ProfileView 
+                  profileId={viewedProfile.id} 
+                  isBusiness={viewedProfile.isBusiness} 
+                  onBack={() => setViewedProfile(null)} 
+                  customLists={viewedProfile.id === 'u1' ? userLists : undefined} 
+                  onSaveClick={(id) => { setItemToSaveId(id); setIsSaveModalOpen(true); }} 
+                  onWriteReview={(b) => { setReviewTargetBusiness(b); setIsCreateModalOpen(true); }}
+                  onPostClick={handlePostNavigation}
+                  onCreateListClick={() => setIsSaveModalOpen(true)}
+                />
             </div>
         ) : activeTab === 'home' ? (
             <div className="h-full w-full relative overflow-hidden bg-black">
@@ -382,6 +414,7 @@ const App: React.FC = () => {
                               onShareClick={() => setIsShareModalOpen(true)} 
                               onReadMore={() => setReviewToRead(item)} 
                               onInteractionComplete={handleNextItem}
+                              onTagClick={handleTagClick}
                             />
                         ))}
                     </div>
@@ -395,7 +428,15 @@ const App: React.FC = () => {
             </div>
         ) : (
             <div className="h-full w-full overflow-hidden">
-                <ProfileView profileId="u1" isBusiness={false} isOwnProfile={true} customLists={userLists} onSaveClick={(id) => { setItemToSaveId(id); setIsSaveModalOpen(true); }} />
+                <ProfileView 
+                  profileId="u1" 
+                  isBusiness={false} 
+                  isOwnProfile={true} 
+                  customLists={userLists} 
+                  onSaveClick={(id) => { setItemToSaveId(id); setIsSaveModalOpen(true); }}
+                  onPostClick={handlePostNavigation}
+                  onCreateListClick={() => setIsSaveModalOpen(true)}
+                />
             </div>
         )}
         
@@ -415,6 +456,7 @@ const App: React.FC = () => {
               await api.addToList(l.id, itemToSaveId); 
               setSavedItemIds(prev => new Set(prev).add(itemToSaveId));
             }
+            fetchData(); // Refresh lists
           }} 
         />
         <CreatePostModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setReviewTargetBusiness(null); }} onPostCreated={fetchData} preselectedBusiness={reviewTargetBusiness} />

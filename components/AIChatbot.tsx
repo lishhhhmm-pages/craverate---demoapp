@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles, Loader2 } from 'lucide-react';
+import { X, Send, Sparkles, Loader2, BrainCircuit } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 interface Message {
@@ -27,8 +27,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ isOpen, onClose }) => {
   }, [messages, isLoading]);
 
   const handleSend = async () => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey || !input.trim() || isLoading) return;
+    if (!input.trim() || isLoading) return;
 
     const userMsg: Message = { role: 'user', text: input };
     setMessages(prev => [...prev, userMsg]);
@@ -36,7 +35,8 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // Requirement: gemini-3-pro-preview with thinkingBudget: 32768
       const response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: [...messages, userMsg].map(m => ({

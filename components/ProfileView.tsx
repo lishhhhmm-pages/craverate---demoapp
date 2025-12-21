@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, MoreHorizontal, MapPin, Grid, Layers, BadgeCheck, Star, Users, Phone, Globe, MessageSquare, Play, Bookmark, Instagram, Twitter, Youtube, Link as LinkIcon, PenLine, Wifi, Car, Clock, CreditCard, Sparkles, Utensils, Info } from 'lucide-react';
 import { MOCK_FEED, MOCK_LISTS, BUSINESSES, USERS } from '../mockData';
-import { ContentType, Business, UserList } from '../types';
+import { ContentType, Business, UserList, Review } from '../types';
 
 interface ProfileViewProps {
   profileId: string;
@@ -12,9 +12,21 @@ interface ProfileViewProps {
   customLists?: UserList[]; 
   onSaveClick?: (id: string) => void;
   onWriteReview?: (business: Business) => void;
+  onPostClick?: (post: Review) => void;
+  onCreateListClick?: () => void;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness = false, onBack, isOwnProfile = false, customLists, onSaveClick, onWriteReview }) => {
+export const ProfileView: React.FC<ProfileViewProps> = ({ 
+  profileId, 
+  isBusiness = false, 
+  onBack, 
+  isOwnProfile = false, 
+  customLists, 
+  onSaveClick, 
+  onWriteReview,
+  onPostClick,
+  onCreateListClick
+}) => {
   // 1. Data Retrieval
   let profileData: any = null;
 
@@ -123,7 +135,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
                 <p className="text-gray-400 font-bold text-sm mt-1.5 uppercase tracking-wide">@{displayProfile.username}</p>
              </div>
              
-             {isBusiness ? (
+             {isBusiness && (
                  <div className="flex flex-col space-y-2">
                     <button 
                         onClick={() => onWriteReview && onWriteReview(displayProfile as Business)}
@@ -133,10 +145,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
                         <span>Rate & Review</span>
                     </button>
                  </div>
-             ) : (
-                <div className="flex space-x-2">
-                    <button className="bg-gray-100 p-3 rounded-full text-gray-700 active:scale-90 transition-transform"><Users className="w-5 h-5" /></button>
-                </div>
              )}
          </div>
 
@@ -164,17 +172,32 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
              {!isBusiness && displayProfile.socialLinks && (
                  <div className="flex items-center space-x-3 mt-5">
                      {displayProfile.socialLinks.instagram && (
-                        <a href="#" className="p-2 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition-all active:scale-95">
+                        <a 
+                          href={`https://instagram.com/${displayProfile.socialLinks.instagram}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="p-2 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition-all active:scale-95"
+                        >
                             <Instagram className="w-5 h-5" />
                         </a>
                      )}
                      {displayProfile.socialLinks.tiktok && (
-                        <a href="#" className="p-2 bg-gray-100 text-black rounded-xl hover:bg-gray-200 transition-all active:scale-95">
+                        <a 
+                          href={`https://tiktok.com/@${displayProfile.socialLinks.tiktok}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="p-2 bg-gray-100 text-black rounded-xl hover:bg-gray-200 transition-all active:scale-95"
+                        >
                              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
                         </a>
                      )}
                      {displayProfile.socialLinks.twitter && (
-                        <a href="#" className="p-2 bg-sky-50 text-sky-500 rounded-xl hover:bg-sky-100 transition-all active:scale-95">
+                        <a 
+                          href={`https://twitter.com/${displayProfile.socialLinks.twitter}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="p-2 bg-sky-50 text-sky-500 rounded-xl hover:bg-sky-100 transition-all active:scale-95"
+                        >
                             <Twitter className="w-5 h-5" />
                         </a>
                      )}
@@ -312,7 +335,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
         {activeTab === 'left' && (
              <div className="grid grid-cols-3 gap-0.5 pt-0.5">
                 {(isBusiness ? businessSpotlight : userPosts).map((item) => (
-                    <div key={item.id} className="aspect-[3/4] bg-gray-100 relative group cursor-pointer overflow-hidden">
+                    <div key={item.id} onClick={() => onPostClick?.(item)} className="aspect-[3/4] bg-gray-100 relative group cursor-pointer overflow-hidden">
                         <img src={item.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="" />
                         
                         {/* Type Indicator */}
@@ -346,7 +369,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
         {activeTab === 'center' && !isBusiness && (
             <div className="divide-y divide-gray-50 bg-white">
                 {userPosts.map(item => (
-                    <div key={item.id} className="p-6 flex gap-5 hover:bg-gray-50/50 transition-colors">
+                    <div key={item.id} onClick={() => onPostClick?.(item)} className="p-6 flex gap-5 hover:bg-gray-50/50 transition-colors cursor-pointer">
                         <div className="w-24 h-28 rounded-3xl bg-gray-100 overflow-hidden flex-shrink-0 shadow-sm border border-gray-100">
                             <img src={item.imageUrl} className="w-full h-full object-cover" alt="" />
                         </div>
@@ -381,7 +404,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
                 // Business Community Reviews
                 <div className="grid grid-cols-3 gap-0.5 pt-0.5">
                      {businessCommunityReviews.map((item) => (
-                        <div key={item.id} className="aspect-square bg-gray-100 relative group cursor-pointer overflow-hidden">
+                        <div key={item.id} onClick={() => onPostClick?.(item)} className="aspect-square bg-gray-100 relative group cursor-pointer overflow-hidden">
                             <img src={item.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="" />
                             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/40 transition-colors" />
                             <div className="absolute bottom-3 left-3 flex items-center space-x-2">
@@ -454,7 +477,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ profileId, isBusiness 
                                 <Layers className="w-12 h-12 opacity-20" />
                             </div>
                             <p className="text-[11px] font-black uppercase tracking-widest opacity-40">Collections are empty</p>
-                            <button className="mt-8 px-8 py-3 bg-orange-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-orange-500/20 active:scale-95 transition-all">Create List</button>
+                            <button 
+                              onClick={onCreateListClick}
+                              className="mt-8 px-8 py-3 bg-orange-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-orange-500/20 active:scale-95 transition-all"
+                            >
+                              Create List
+                            </button>
                         </div>
                     )}
                 </div>

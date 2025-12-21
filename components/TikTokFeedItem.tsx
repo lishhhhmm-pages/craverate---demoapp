@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Review, ContentType } from '../types';
-import { Star, MessageCircle, Heart, Share2, MapPin, BadgeCheck, Loader2, Bookmark, CheckCircle2, XCircle } from 'lucide-react';
+import { Star, MessageCircle, Heart, Share2, MapPin, BadgeCheck, Loader2, Bookmark, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
 
 interface TikTokFeedItemProps {
   item: Review;
@@ -13,9 +13,10 @@ interface TikTokFeedItemProps {
   onCommentsClick?: () => void;
   onShareClick?: () => void;
   onReadMore?: () => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, isSaved = false, onOpenProfile, onSaveClick, onCommentsClick, onShareClick, onReadMore, onInteractionComplete }) => {
+export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, isSaved = false, onOpenProfile, onSaveClick, onCommentsClick, onShareClick, onReadMore, onInteractionComplete, onTagClick }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isBusinessPost = item.type === ContentType.BUSINESS_POST;
   
@@ -197,14 +198,16 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
         >
           <div 
             className="relative cursor-pointer active:scale-90 transition-transform" 
-            onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}
+            onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, isBusinessPost); }}
           >
             <div className="w-11 h-11 rounded-full border border-white/40 overflow-hidden shadow-lg">
               <img src={item.author.avatarUrl} className="w-full h-full object-cover" draggable="false" />
             </div>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-rose-600 rounded-full w-4 h-4 flex items-center justify-center border border-white shadow-sm">
-              <span className="text-[10px] font-black text-white">+</span>
-            </div>
+            {!isBusinessPost && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-rose-600 rounded-full w-4 h-4 flex items-center justify-center border border-white shadow-sm">
+                <span className="text-[10px] font-black text-white">+</span>
+              </div>
+            )}
           </div>
 
           <button className="flex flex-col items-center group" onClick={(e) => { e.stopPropagation(); setVoteState(voteState === 'agreed' ? 'none' : 'agreed'); }}>
@@ -241,7 +244,7 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
           className="absolute bottom-24 left-0 right-16 px-5 z-10 flex flex-col justify-end pointer-events-auto pb-4"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center space-x-2 mb-2 cursor-pointer w-fit" onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, item.type === ContentType.BUSINESS_POST); }}>
+          <div className="flex items-center space-x-2 mb-2 cursor-pointer w-fit" onClick={(e) => { e.stopPropagation(); onOpenProfile?.(item.author.id, isBusinessPost); }}>
             <span className="font-bold text-base text-white drop-shadow-md tracking-tight">@{item.author.username}</span>
             {isBusinessPost ? (
               <BadgeCheck className="w-4 h-4 text-sky-400 fill-white" />
@@ -275,9 +278,13 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
 
           <div className="flex flex-wrap gap-2">
             {item.tags?.slice(0, 3).map((tag) => (
-              <span key={tag} className="px-2 py-1 rounded-lg bg-black/30 border border-white/5 text-[9px] font-bold text-white/80 backdrop-blur-md">
+              <button 
+                key={tag} 
+                onClick={(e) => { e.stopPropagation(); onTagClick?.(tag); }}
+                className="px-2 py-1 rounded-lg bg-black/30 border border-white/5 text-[9px] font-bold text-white/80 backdrop-blur-md hover:bg-white/10 transition-colors"
+              >
                 #{tag}
-              </span>
+              </button>
             ))}
           </div>
         </div>

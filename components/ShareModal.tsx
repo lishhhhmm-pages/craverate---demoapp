@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Link as LinkIcon, Mail, MessageSquare, Twitter, Copy, Check } from 'lucide-react';
 import { USERS } from '../mockData';
@@ -11,12 +12,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
   const [sentTo, setSentTo] = useState<string[]>([]);
   const [isVisible, setIsVisible] = useState(false);
+  const [sharingStatus, setSharingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
         setIsVisible(true);
         setSentTo([]);
         setCopied(false);
+        setSharingStatus(null);
     } else {
         setTimeout(() => setIsVisible(false), 300);
     }
@@ -24,6 +27,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
 
   const handleCopy = () => {
     setCopied(true);
+    // Real implementation would use navigator.clipboard
+    navigator.clipboard?.writeText(window.location.href);
     setTimeout(() => {
         onClose();
     }, 1000);
@@ -32,6 +37,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
   const handleSendToUser = (userId: string) => {
     if (sentTo.includes(userId)) return;
     setSentTo([...sentTo, userId]);
+  };
+
+  const handleExternalShare = (platform: string) => {
+    setSharingStatus(`Sharing to ${platform}...`);
+    setTimeout(() => {
+      setSharingStatus(`Shared successfully!`);
+      setTimeout(onClose, 800);
+    }, 1000);
   };
 
   if (!isVisible) return null;
@@ -61,6 +74,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="p-6 space-y-6 bg-white safe-pb">
+            {sharingStatus && (
+              <div className="bg-orange-50 text-orange-600 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-center animate-fade-in">
+                {sharingStatus}
+              </div>
+            )}
             
             {/* Quick Send Row */}
             <div>
@@ -107,22 +125,22 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
                         <span className="text-xs font-medium text-gray-600">{copied ? 'Copied' : 'Copy Link'}</span>
                     </button>
 
-                    <button className="flex flex-col items-center space-y-2">
-                         <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 transition-colors">
+                    <button onClick={() => handleExternalShare('WhatsApp')} className="flex flex-col items-center space-y-2 group">
+                         <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center group-hover:bg-green-100 transition-colors">
                             <MessageSquare className="w-6 h-6" />
                          </div>
                          <span className="text-xs font-medium text-gray-600">WhatsApp</span>
                     </button>
 
-                    <button className="flex flex-col items-center space-y-2">
-                         <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center hover:bg-sky-100 transition-colors">
+                    <button onClick={() => handleExternalShare('Twitter')} className="flex flex-col items-center space-y-2 group">
+                         <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center group-hover:bg-sky-100 transition-colors">
                             <Twitter className="w-6 h-6" />
                          </div>
                          <span className="text-xs font-medium text-gray-600">Twitter</span>
                     </button>
 
-                    <button className="flex flex-col items-center space-y-2">
-                         <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center hover:bg-purple-100 transition-colors">
+                    <button onClick={() => handleExternalShare('Email')} className="flex flex-col items-center space-y-2 group">
+                         <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                             <Mail className="w-6 h-6" />
                          </div>
                          <span className="text-xs font-medium text-gray-600">Email</span>

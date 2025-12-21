@@ -1,8 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Search, MapPin, Camera, Star, ChevronLeft, Upload, Loader2, Wand2 } from 'lucide-react';
+import { X, Search, MapPin, Camera, Star, ChevronLeft, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Business, DraftPost } from '../types';
 import { api } from '../services/api';
-import { GoogleGenAI } from "@google/genai";
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -14,8 +14,6 @@ interface CreatePostModalProps {
 export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onPostCreated, preselectedBusiness }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAiEditing, setIsAiEditing] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Business[]>([]);
   
@@ -56,66 +54,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
     if (file) {
       setDraft(prev => ({ ...prev, mediaFile: file, mediaPreviewUrl: URL.createObjectURL(file) }));
       setStep(3);
-    }
-  };
-
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        resolve(base64String.split(',')[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const handleAiEdit = async () => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey || !aiPrompt.trim() || !draft.mediaPreviewUrl) return;
-    setIsAiEditing(true);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await fetch(draft.mediaPreviewUrl);
-      const blob = await response.blob();
-      const base64Data = await blobToBase64(blob);
-
-      const result = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                data: base64Data,
-                mimeType: blob.type,
-              },
-            },
-            {
-              text: aiPrompt,
-            },
-          ],
-        },
-      });
-
-      const parts = result.candidates?.[0]?.content?.parts;
-      if (parts) {
-        for (const part of parts) {
-          if (part.inlineData) {
-            const newBase64 = part.inlineData.data;
-            const newUrl = `data:image/png;base64,${newBase64}`;
-            setDraft(prev => ({ ...prev, mediaPreviewUrl: newUrl }));
-            break;
-          }
-        }
-      }
-      setAiPrompt('');
-    } catch (error) {
-      console.error("AI Edit failed:", error);
-      alert("AI Edit failed. Please try a different prompt.");
-    } finally {
-      setIsAiEditing(false);
     }
   };
 
@@ -213,30 +151,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
                 <img src={draft.mediaPreviewUrl} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                 
-                {/* AI EDIT OVERLAY */}
-                <div className="absolute top-4 right-4 z-10">
-                   <div className="flex flex-col items-end space-y-2">
-                      <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/20 flex items-center">
-                         <input 
-                           type="text" 
-                           placeholder="AI Edit prompt..." 
-                           className="bg-transparent text-xs text-white px-3 py-1 outline-none w-40 font-bold placeholder:text-white/40"
-                           value={aiPrompt}
-                           onChange={(e) => setAiPrompt(e.target.value)}
-                           onKeyDown={(e) => e.key === 'Enter' && handleAiEdit()}
-                         />
-                         <button 
-                           onClick={handleAiEdit}
-                           disabled={isAiEditing || !aiPrompt.trim()}
-                           className="p-2 bg-orange-600 rounded-full text-white active:scale-90 transition-all disabled:opacity-50"
-                         >
-                            {isAiEditing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
-                         </button>
-                      </div>
-                      <p className="text-[9px] font-black text-white/60 uppercase tracking-widest bg-black/40 px-2 py-1 rounded-lg">Try: "Add retro filter", "Add a burger" or "Make it vibrant"</p>
-                   </div>
-                </div>
-
                 <div className="absolute bottom-6 left-6 right-6">
                    <h2 className="text-white font-black text-2xl leading-tight mb-1">{draft.businessName}</h2>
                    <div className="flex items-center text-white/60 text-[10px] font-black uppercase tracking-widest">

@@ -167,6 +167,22 @@ export const MOCK_FEED: Review[] = [
     tags: ['muckbang', 'video', 'gyro', 'streetfood']
   },
   {
+    id: 'bp1-plaka',
+    type: ContentType.BUSINESS_POST,
+    mediaType: 'video',
+    author: BUSINESSES.b1,
+    businessId: 'b1',
+    businessName: 'Plaka Taverna',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-chef-flaming-a-dish-in-a-pan-33100-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+    text: 'Our signature Saganaki is flaming hot tonight! 🔥 Come try the tradition. #plaka #greekfood #official',
+    timestamp: '1h ago',
+    agreeCount: 4200,
+    disagreeCount: 0,
+    commentCount: 120,
+    tags: ['tradition', 'official', 'greek']
+  },
+  {
     id: 'v2-pov',
     type: ContentType.USER_REVIEW,
     mediaType: 'video',
@@ -184,6 +200,22 @@ export const MOCK_FEED: Review[] = [
     tags: ['POV', 'video', 'sushi', 'zen']
   },
   {
+    id: 'bp2-gyro',
+    type: ContentType.BUSINESS_POST,
+    mediaType: 'video',
+    author: BUSINESSES.b2,
+    businessId: 'b2',
+    businessName: 'Gyro King',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fast-food-worker-wrapping-a-burrito-32616-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=800&q=80',
+    text: 'Behind the scenes at the shop! 🌯 Quality ingredients, every single time. 👑 #gyroking #fresh #official',
+    timestamp: '3h ago',
+    agreeCount: 8900,
+    disagreeCount: 5,
+    commentCount: 450,
+    tags: ['behindthescenes', 'official', 'streetfood']
+  },
+  {
     id: 'v3-muckbang',
     type: ContentType.USER_REVIEW,
     mediaType: 'video',
@@ -199,6 +231,21 @@ export const MOCK_FEED: Review[] = [
     disagreeCount: 0,
     commentCount: 64,
     tags: ['video', 'plaka', 'wine', 'datenight']
+  },
+  {
+    id: 'bp3-sushi',
+    type: ContentType.BUSINESS_POST,
+    mediaType: 'image',
+    author: BUSINESSES.b5,
+    businessId: 'b5',
+    businessName: 'Sushi Zen',
+    imageUrl: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80',
+    text: 'Introducing our Autumn Omakase Menu. 🍂 Reservation links in bio. #sushizen #luxury #newmenu',
+    timestamp: '5h ago',
+    agreeCount: 1500,
+    disagreeCount: 0,
+    commentCount: 45,
+    tags: ['newmenu', 'luxury', 'sushi']
   },
   {
     id: 'v4-pov',
