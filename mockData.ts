@@ -61,6 +61,7 @@ export const BUSINESSES: Record<string, Business> = {
     displayName: 'Plaka Taverna',
     category: 'Greek Restaurant',
     location: 'Adrianou 12, Plaka',
+    phone: '+30 210 555 1234',
     avatarUrl: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=200&h=200&fit=crop',
     coverImageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
     isVerified: true,
@@ -80,6 +81,7 @@ export const BUSINESSES: Record<string, Business> = {
     displayName: 'Gyro King',
     category: 'Street Food',
     location: 'Monastiraki Sq 5',
+    phone: '+30 210 555 8888',
     avatarUrl: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=200&h=200&fit=crop',
     coverImageUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80',
     isVerified: true,
@@ -99,6 +101,7 @@ export const BUSINESSES: Record<string, Business> = {
     displayName: 'Little Tree',
     category: 'Coffee Shop',
     location: 'Kavalloti 2, Makrygianni',
+    phone: '+30 210 555 4444',
     avatarUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&h=200&fit=crop',
     coverImageUrl: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80',
     isVerified: false,
@@ -108,7 +111,8 @@ export const BUSINESSES: Record<string, Business> = {
     isOpen: true,
     latLng: [37.9675, 23.7237],
     distance: '350m',
-    walkingTime: '5 min'
+    walkingTime: '5 min',
+    ratingBreakdown: { 5: 200, 4: 150, 3: 50, 2: 30, 1: 20 }
   },
   b4: {
     id: 'b4',
@@ -117,6 +121,7 @@ export const BUSINESSES: Record<string, Business> = {
     displayName: 'Peinirli Ionias',
     category: 'Bakery',
     location: 'Panormou 11',
+    phone: '+30 210 555 2222',
     avatarUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&h=200&fit=crop',
     coverImageUrl: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=800&q=80',
     isVerified: true,
@@ -126,7 +131,8 @@ export const BUSINESSES: Record<string, Business> = {
     isOpen: true,
     latLng: [37.9925, 23.7657],
     distance: '2.5km',
-    walkingTime: '30 min'
+    walkingTime: '30 min',
+    ratingBreakdown: { 5: 4000, 4: 800, 3: 200, 2: 150, 1: 50 }
   },
   b5: {
     id: 'b5',
@@ -135,6 +141,7 @@ export const BUSINESSES: Record<string, Business> = {
     displayName: 'Sushi Zen',
     category: 'Japanese',
     location: 'Syntagma Sq 3',
+    phone: '+30 210 555 9999',
     avatarUrl: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=200&h=200&fit=crop',
     coverImageUrl: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800&q=80',
     isVerified: true,
@@ -144,7 +151,8 @@ export const BUSINESSES: Record<string, Business> = {
     isOpen: true,
     latLng: [37.9755, 23.7347],
     distance: '800m',
-    walkingTime: '10 min'
+    walkingTime: '10 min',
+    ratingBreakdown: { 5: 700, 4: 150, 3: 30, 2: 5, 1: 5 }
   }
 };
 

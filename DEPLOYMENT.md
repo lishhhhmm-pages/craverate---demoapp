@@ -26,20 +26,22 @@ The application requires the Gemini API key to function. Add it as a repository 
 4. Value: Your actual Gemini API key
 5. Click **Add secret**
 
-### 3. Configure Base Path (Optional)
+### 3. Configure Base Path
 
-The Vite configuration uses an environment variable for the base path:
+The Vite configuration uses the `VITE_BASE_PATH` environment variable for the base path:
 
 - **For GitHub Pages subdirectory** (e.g., `https://username.github.io/repo-name/`):
-  - The base path defaults to `/` which works for local development
-  - When deploying, GitHub Actions will handle the correct path automatically
-  - If you need to manually set it, create a `.env.production` file with:
+  - Create a `.env.production` file in the project root with:
     ```
-    VITE_BASE_PATH=/your-repo-name/
+    VITE_BASE_PATH=/repo-name/
     ```
+  - Replace `repo-name` with your actual repository name
+  - Note: The leading and trailing slashes are important
 
 - **For custom domain or root deployment**:
-  - No changes needed, keep `VITE_BASE_PATH=/`
+  - No changes needed - the default `/` works for these scenarios
+  - Examples: `https://yourdomain.com/` or `https://username.github.io/`
+
 
 ### 4. Deploy
 
@@ -96,8 +98,13 @@ The exact URL will be shown in the GitHub Actions workflow output and in your re
 
 ### SPA Routing Issues
 
-The `404.html` file handles client-side routing. If you add a router library later:
-- The fallback mechanism is already in place
+The `404.html` file handles client-side routing and is currently configured for custom domain or root deployment (`pathSegmentsToKeep = 0`). 
+
+**If deploying to a subdirectory** (e.g., `https://username.github.io/repo-name/`):
+- Change `pathSegmentsToKeep` from `0` to `1` in `public/404.html`
+- This ensures the route handling doesn't interfere with the repository name in the URL
+
+For troubleshooting:
 - Test direct navigation to routes after deployment
 - Check browser console for routing errors
 

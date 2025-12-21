@@ -29,20 +29,30 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const resetForm = () => {
+    setIsSubmitting(false);
+    setSearchQuery('');
+    setDraft({
+        businessId: preselectedBusiness?.id || null,
+        businessName: preselectedBusiness?.name || '',
+        mediaFile: null,
+        mediaPreviewUrl: '',
+        rating: 0,
+        text: '',
+        tags: []
+    });
+    setStep(preselectedBusiness ? 2 : 1);
+  };
+
   useEffect(() => {
     if (isOpen) {
-        if (preselectedBusiness) {
-            setDraft(prev => ({ ...prev, businessId: preselectedBusiness.id, businessName: preselectedBusiness.name }));
-            setStep(2);
-        } else {
-            setStep(1);
-        }
+        resetForm();
     }
   }, [isOpen, preselectedBusiness]);
 
   useEffect(() => {
-    if (step === 1) api.searchBusinesses(searchQuery).then(setSearchResults);
-  }, [searchQuery, step]);
+    if (step === 1 && isOpen) api.searchBusinesses(searchQuery).then(setSearchResults);
+  }, [searchQuery, step, isOpen]);
 
   const selectBusiness = (biz: Business) => {
     setDraft(prev => ({ ...prev, businessId: biz.id, businessName: biz.name }));
@@ -58,6 +68,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
   };
 
   const handlePost = async () => {
+    if (isSubmitting || draft.rating === 0) return;
     setIsSubmitting(true);
     try {
       const hashtags = draft.text.match(/#[a-z0-9_]+/gi)?.map(t => t.substring(1)) || [];
@@ -71,6 +82,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
         tags: hashtags
       });
       onPostCreated();
+      resetForm();
       onClose();
     } catch (error) {
       console.error(error);

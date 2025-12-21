@@ -27,15 +27,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onPostClick,
   onCreateListClick
 }) => {
-  // 1. Data Retrieval
+  // 1. Data Retrieval - Ensure full Business data is prioritized
   let profileData: any = null;
 
   if (isBusiness) {
-    profileData = Object.values(BUSINESSES).find(b => b.id === profileId);
+    profileData = BUSINESSES[profileId] || Object.values(BUSINESSES).find(b => b.id === profileId);
   } else {
-    profileData = Object.values(USERS).find(u => u.id === profileId);
+    profileData = USERS[profileId] || Object.values(USERS).find(u => u.id === profileId);
   }
 
+  // Fallback if not in main lists
   if (!profileData) {
       profileData = MOCK_FEED.find(item => 
         isBusiness ? item.businessId === profileId : item.author.id === profileId
@@ -62,7 +63,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     (isBusiness && item.businessId === profileId && item.type === ContentType.BUSINESS_POST)
   );
   
-  // Community is content authored BY users about this business
+  // Community reviews authored BY users about this business
   const businessCommunityReviews = MOCK_FEED.filter(item => 
     item.businessId === profileId && item.type === ContentType.USER_REVIEW
   );
@@ -168,55 +169,40 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                  {displayProfile.bio || (isBusiness ? "Crafting memorable flavors in the heart of the city. Join us for an authentic experience. ✨" : "Exploring the world one bite at a time. 🌍🍴")}
              </p>
              
-             {/* SOCIAL LINKS */}
+             {/* VISUAL ONLY SOCIAL LINKS */}
              {!isBusiness && displayProfile.socialLinks && (
                  <div className="flex items-center space-x-3 mt-5">
                      {displayProfile.socialLinks.instagram && (
-                        <a 
-                          href={`https://instagram.com/${displayProfile.socialLinks.instagram}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="p-2 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition-all active:scale-95"
-                        >
+                        <div className="p-2 bg-pink-50 text-pink-600 rounded-xl">
                             <Instagram className="w-5 h-5" />
-                        </a>
+                        </div>
                      )}
                      {displayProfile.socialLinks.tiktok && (
-                        <a 
-                          href={`https://tiktok.com/@${displayProfile.socialLinks.tiktok}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="p-2 bg-gray-100 text-black rounded-xl hover:bg-gray-200 transition-all active:scale-95"
-                        >
+                        <div className="p-2 bg-gray-100 text-black rounded-xl">
                              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
-                        </a>
+                        </div>
                      )}
                      {displayProfile.socialLinks.twitter && (
-                        <a 
-                          href={`https://twitter.com/${displayProfile.socialLinks.twitter}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="p-2 bg-sky-50 text-sky-500 rounded-xl hover:bg-sky-100 transition-all active:scale-95"
-                        >
+                        <div className="p-2 bg-sky-50 text-sky-500 rounded-xl">
                             <Twitter className="w-5 h-5" />
-                        </a>
+                        </div>
                      )}
                  </div>
              )}
 
              {isBusiness && (
-                <div className="flex flex-col space-y-3 mt-6 border-y border-gray-50 py-5">
-                    <div className="flex items-center text-gray-600 text-xs font-bold">
-                        <MapPin className="w-4 h-4 mr-3 text-orange-500" />
-                        {displayProfile.location}
+                <div className="flex flex-col space-y-4 mt-6 border-y border-gray-100 py-6">
+                    <div className="flex items-start">
+                        <MapPin className="w-5 h-5 mr-4 text-orange-500 shrink-0" />
+                        <span className="text-sm font-bold text-gray-700 leading-tight">{displayProfile.location || 'Athens, Greece'}</span>
                     </div>
-                    <div className="flex items-center text-gray-600 text-xs font-bold">
-                        <Phone className="w-4 h-4 mr-3 text-orange-500" />
-                        +30 210 555 1234
+                    <div className="flex items-center">
+                        <Phone className="w-5 h-5 mr-4 text-orange-500 shrink-0" />
+                        <span className="text-sm font-bold text-gray-700">{displayProfile.phone || '+30 210 555 0000'}</span>
                     </div>
-                    <div className="flex items-center text-gray-600 text-xs font-bold">
-                        <Clock className="w-4 h-4 mr-3 text-orange-500" />
-                        Mon - Sun: 12:00 PM - 12:00 AM
+                    <div className="flex items-center">
+                        <Clock className="w-5 h-5 mr-4 text-orange-500 shrink-0" />
+                        <span className="text-sm font-bold text-gray-700 uppercase tracking-tighter">Mon - Sun: 12:00 PM - 12:00 AM</span>
                     </div>
                 </div>
              )}
@@ -255,7 +241,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
       {/* --- BUSINESS RATING SUMMARY --- */}
       {isBusiness && (displayProfile as Business).ratingBreakdown && (
-        <div className="px-5 py-6 border-t border-b border-gray-50 mx-5 my-8 rounded-[2rem] bg-gray-50/50">
+        <div className="px-5 py-6 border-t border-b border-gray-100 mx-5 my-8 rounded-[2rem] bg-gray-50/50">
             <div className="flex items-center space-x-8">
                 <div className="flex flex-col items-center justify-center">
                     <span className="text-5xl font-black text-gray-900 tracking-tighter">{displayProfile.rating}</span>
@@ -293,8 +279,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     className={`flex-1 py-5 text-[10px] font-black uppercase tracking-[0.2em] relative transition-colors flex items-center justify-center space-x-2 ${activeTab === 'right' ? 'text-gray-900' : 'text-gray-400'}`}
                     onClick={() => setActiveTab('right')}
                 >
-                    <span>Community</span>
-                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black ${activeTab === 'right' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100'}`}>{businessCommunityReviews.length}</span>
+                    {/* RENAMED COMMUNITY TO REVIEWS */}
+                    <span>Reviews</span>
+                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black ${activeTab === 'right' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100'}`}>{displayProfile.reviewCount}</span>
                     {activeTab === 'right' && <div className="absolute bottom-0 inset-x-8 h-1 bg-orange-600 rounded-t-full" />}
                 </button>
             </>
@@ -398,7 +385,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         )}
 
 
-        {/* === LISTS (Right Tab for User) or COMMUNITY (Right Tab for Business) === */}
+        {/* === LISTS (Right Tab for User) or REVIEWS (Right Tab for Business) === */}
         {activeTab === 'right' && (
             isBusiness ? (
                 // Business Community Reviews
