@@ -17,9 +17,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   return (
     <div className="h-[100dvh] bg-gray-100 flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-gray-200 font-sans">
       
-      {/* Top Header - Refined for depth */}
+      {/* Top Header - High Z-Index to stay above map UI */}
       {shouldRenderHeader && (
-          <header className="z-50 absolute top-0 left-0 right-0 h-24 flex items-start justify-between px-4 pointer-events-none pt-2">
+          <header className="z-[2000] absolute top-0 left-0 right-0 h-24 flex items-start justify-between px-4 pointer-events-none pt-2">
              <div className="w-full pointer-events-auto">
                 {headerContent || (
                     <div className="flex justify-between items-center w-full px-5 pt-5">

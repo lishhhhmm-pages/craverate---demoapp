@@ -56,14 +56,18 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
     if (!e.isPrimary || isAdvancing) return;
     startX.current = e.clientX;
     setIsDragging(true);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    // Note: Do not use setPointerCapture immediately to allow browser to determine if this is a vertical scroll (touch-pan-y)
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging || startX.current === null || isAdvancing) return;
     const diff = e.clientX - startX.current;
     
-    if (Math.abs(diff) > 2) {
+    // Only intercept if movement is significantly horizontal
+    if (Math.abs(diff) > 10) {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
+            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        }
         setDragX(diff);
     }
   };
@@ -71,7 +75,9 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (!isDragging) return;
     setIsDragging(false);
-    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    }
 
     const threshold = 100;
     const now = Date.now();
@@ -120,7 +126,7 @@ export const TikTokFeedItem: React.FC<TikTokFeedItemProps> = ({ item, isActive, 
   return (
     <div className="relative w-full h-full bg-black snap-start flex-shrink-0 overflow-hidden select-none">
       <div 
-        className="w-full h-full relative touch-none pointer-events-auto"
+        className="w-full h-full relative touch-pan-y pointer-events-auto"
         style={{ 
           transform: `translateX(${dragX}px) rotate(${dragX * 0.01}deg)`, 
           transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)' 

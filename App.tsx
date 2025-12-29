@@ -423,7 +423,14 @@ const App: React.FC = () => {
             </div>
         ) : activeTab === 'map' ? (
             <div className="h-full w-full relative bg-gray-50">
-                <MapView onOpenProfile={(id, isBiz) => setViewedProfile({id, isBusiness: isBiz})} />
+                <MapView 
+                  onOpenProfile={(id, isBiz) => setViewedProfile({id, isBusiness: isBiz})} 
+                  onSaveClick={(id) => { setItemToSaveId(id); setIsSaveModalOpen(true); }}
+                  onCommentsClick={(id) => { setActivePostIdForComments(id); setIsCommentsModalOpen(true); }}
+                  onShareClick={() => setIsShareModalOpen(true)}
+                  onReadMore={(item) => setReviewToRead(item)}
+                  onTagClick={handleTagClick}
+                />
                 {renderSearchOverlay()}
             </div>
         ) : (
